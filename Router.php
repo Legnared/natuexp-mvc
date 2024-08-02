@@ -27,7 +27,8 @@ class Router
     public function comprobarRutas()
     {
         // Normalizar la URL actual
-        $url_actual = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+        $url_actual = strtok($_SERVER['REQUEST_URI'], '?') ?? '/';
+        //$url_actual = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
         $url_actual = $url_actual === '/' ? '/' : rtrim($url_actual, '/');
         $method = $_SERVER['REQUEST_METHOD'];
 

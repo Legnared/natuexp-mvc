@@ -13,7 +13,7 @@ if (strpos($host, 'localhost') !== false) {
     $dotenv = Dotenv::createImmutable(__DIR__, '.env.local');
 } elseif (strpos($host, 'veynoqe.nyc.dom.my.id') !== false) {
     // Cargar configuración para staging https://veynoqe.nyc.dom.my.id/
-    $dotenv = Dotenv::createImmutable(__DIR__, '.env.staging');
+    $dotenv = Dotenv::createImmutable(__DIR__, '.env');
 } elseif (strpos($host, 'www.natuexp.com') !== false) {
     // Cargar configuración para producción
     $dotenv = Dotenv::createImmutable(__DIR__, '.env.production');
