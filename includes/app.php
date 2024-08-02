@@ -5,37 +5,24 @@ use Model\ActiveRecord;
 
 require __DIR__ . '/../vendor/autoload.php';
 
-// Añadir Dotenv
-$dotenv = Dotenv::createImmutable(__DIR__);
-$dotenv->safeLoad();
+// Detectar entorno basándose en la URL del servidor
+$host = $_SERVER['HTTP_HOST'];
 
-// Obtener el entorno, por defecto es 'local'
-$env = $_ENV['APP_ENV'] ?? 'local';
-
-// Configurar las variables de entorno dependiendo del entorno
-if ($env === 'local') {
-    $_ENV['DB_HOST'] = $_ENV['LOCAL_DB_HOST'];
-    $_ENV['DB_USER'] = $_ENV['LOCAL_DB_USER'];
-    $_ENV['DB_PASS'] = $_ENV['LOCAL_DB_PASS'];
-    $_ENV['DB_NAME'] = $_ENV['LOCAL_DB_NAME'];
-    $_ENV['EMAIL_HOST'] = $_ENV['LOCAL_EMAIL_HOST'];
-    $_ENV['EMAIL_PORT'] = $_ENV['LOCAL_EMAIL_PORT'];
-    $_ENV['EMAIL_USER'] = $_ENV['LOCAL_EMAIL_USER'];
-    $_ENV['EMAIL_PASS'] = $_ENV['LOCAL_EMAIL_PASS'];
-    $_ENV['EMAIL_SSL'] = $_ENV['LOCAL_EMAIL_SSL'];
-    $_ENV['HOST'] = $_ENV['LOCAL_HOST'];
+if (strpos($host, 'localhost') !== false) {
+    // Cargar configuración local
+    $dotenv = Dotenv::createImmutable(__DIR__, '.env.local');
+} elseif (strpos($host, 'staging.veynoqe.nyc.dom.my.id') !== false) {
+    // Cargar configuración para staging
+    $dotenv = Dotenv::createImmutable(__DIR__, '.env.staging');
+} elseif (strpos($host, 'www.natuexp.com') !== false) {
+    // Cargar configuración para producción
+    $dotenv = Dotenv::createImmutable(__DIR__, '.env.production');
 } else {
-    $_ENV['DB_HOST'] = $_ENV['REMOTE_DB_HOST'];
-    $_ENV['DB_USER'] = $_ENV['REMOTE_DB_USER'];
-    $_ENV['DB_PASS'] = $_ENV['REMOTE_DB_PASS'];
-    $_ENV['DB_NAME'] = $_ENV['REMOTE_DB_NAME'];
-    $_ENV['EMAIL_HOST'] = $_ENV['REMOTE_EMAIL_HOST'];
-    $_ENV['EMAIL_PORT'] = $_ENV['REMOTE_EMAIL_PORT'];
-    $_ENV['EMAIL_USER'] = $_ENV['REMOTE_EMAIL_USER'];
-    $_ENV['EMAIL_PASS'] = $_ENV['REMOTE_EMAIL_PASS'];
-    $_ENV['EMAIL_SSL'] = $_ENV['REMOTE_EMAIL_SSL'];
-    $_ENV['HOST'] = $_ENV['REMOTE_HOST'];
+    // Cargar configuración remota por defecto
+    $dotenv = Dotenv::createImmutable(__DIR__, '.env.remote');
 }
+
+$dotenv->load();
 
 require 'funciones.php';
 require 'database.php';
