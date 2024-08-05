@@ -80,7 +80,7 @@ class Paciente extends ActiveRecord {
         $this->tiempo_tratamiento_sujerido = $args['tiempo_tratamiento_sujerido'] ?? '';
         $this->diagnostico = htmlspecialchars($args['diagnostico'] ?? '', ENT_QUOTES, 'UTF-8');
         $this->observaciones = htmlspecialchars($args['observaciones'] ?? '', ENT_QUOTES, 'UTF-8');
-        $this->dosis_tratamiento = $args['dosis_tratamiento'] ?? '';
+        $this->dosis_tratamiento = htmlspecialchars($args['dosis_tratamiento'] ?? '', ENT_QUOTES, 'UTF-8');
         $this->expediente_file = $args['expediente_file'] ?? '';
         $this->sexo_id = $args['sexo_id'] ?? '';
         $this->usuario_id = $args['usuario_id'] ?? '';
@@ -207,5 +207,17 @@ class Paciente extends ActiveRecord {
         $resultado = self::$db->query($query);
         return $resultado->fetch_all(MYSQLI_ASSOC); // Ajusta según cómo manejas los resultados
     }
+
+    // En el modelo Paciente.php
+    public static function findByUrlAvance($url_avance)
+    {
+        // Asumiendo que $db es tu conexión a la base de datos
+        $query = "SELECT * FROM pacientes WHERE url_avance = :url_avance LIMIT 1";
+        $stmt = self::$db->prepare($query);
+        $stmt->bindParam(':url_avance', $url_avance);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
     
 }

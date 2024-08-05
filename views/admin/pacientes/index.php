@@ -22,7 +22,7 @@
                         <?php foreach ($pacientes as $paciente) { ?>
                             <tr>
                                 <td class="d-none d-sm-table-cell">
-                                    <a href="/admin/receta_medica?id=<?php echo $paciente->url_avance; ?>">
+                                    <a href="/admin/receta?id=<?php echo $paciente->url_avance; ?>">
                                         <span class="badge badge-success">EXP<input type="hidden" name="id" value="<?php echo $paciente->id; ?>"></span>
                                     </a>
                                 </td>
@@ -37,7 +37,7 @@
                                     <div class="center col-xl-6">
                                         <div class="push">
                                             <div class="btn-group" role="group" aria-label="Button group with nested dropdown">
-                                                <a class="btn btn-sm btn-primary" href="/admin/receta_medica?id=<?php echo $paciente->url_avance; ?>">
+                                                <a class="btn btn-sm btn-primary" href="/admin/receta?id=<?php echo $paciente->url_avance; ?>">
                                                     <i class="fa fa-solid fa-eye"></i> Ver Receta Médica
                                                     <input type="hidden" name="id" value="<?php echo $paciente->id; ?>">
                                                 </a>

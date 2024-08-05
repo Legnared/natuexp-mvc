@@ -99,10 +99,6 @@
                     </div>
                 </div>
 
-                <div class="mb-3">
-                    <label for="numero_seguro" class="form-label">Número de Seguro Social</label>
-                    <input type="text" class="form-control" id="numero_seguro" name="numero_seguro" placeholder="Número de Seguro Social" required>
-                </div>
             </fieldset>
 
             <!-- Datos Adicionales -->

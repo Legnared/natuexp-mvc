@@ -6,7 +6,7 @@ class CitaMedica extends ActiveRecord {
     protected static $tabla = 'citas_medica';
     protected static $columnasDB = [
         'id', 'nombre', 'fecha_nacimiento', 'sexo', 'telefono', 'email',
-        'direccion', 'fecha_hora', 'motivo', 'tipo_consulta', 'numero_seguro', 'aceptar_terminos'
+        'direccion', 'fecha_hora', 'motivo', 'tipo_consulta', 'aceptar_terminos'
     ];
 
     public $id;
@@ -19,7 +19,6 @@ class CitaMedica extends ActiveRecord {
     public $fecha_hora;
     public $motivo;
     public $tipo_consulta;
-    public $numero_seguro;
     public $aceptar_terminos;
 
     public function __construct($args = []) {
@@ -33,7 +32,6 @@ class CitaMedica extends ActiveRecord {
         $this->fecha_hora = $args['fecha_hora'] ?? '';
         $this->motivo = $args['motivo'] ?? '';
         $this->tipo_consulta = $args['tipo_consulta'] ?? '';
-        $this->numero_seguro = $args['numero_seguro'] ?? '';
         $this->aceptar_terminos = $args['aceptar_terminos'] ?? false;
     }
 
@@ -57,9 +55,6 @@ class CitaMedica extends ActiveRecord {
         }
         if (!$this->direccion) {
             $alertas['danger'][] = 'La Dirección es obligatoria';
-        }
-        if (!$this->numero_seguro) {
-            $alertas['danger'][] = 'El número de Seguro Social es obligatorio';
         }
         if (!$this->fecha_hora) {
             $alertas['danger'][] = 'La fecha y hora de la cita son obligatorias';

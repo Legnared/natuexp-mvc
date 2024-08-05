@@ -189,6 +189,27 @@
                     </div>
                 </div>
 
+                  <!-- Tiempo de Tratamiento -->
+                  <div class="col-md-6 mb-3">
+                    <div class="form-material">
+                        <input type="text" class="form-control" id="tiempo_tratamiento_clinico"
+                            name="tiempo_tratamiento_sujerido" placeholder="Tiempo de tratamiento sugerido"
+                            value="<?php echo $paciente->tiempo_tratamiento_sujerido ?? ''; ?>">
+                        <label for="tiempo_tratamiento_sujerido"><span class="text-danger">*</span>Tiempo de Tratamiento Sugerido</label>
+                    </div>
+                </div>
+
+                
+                  <!-- Tiempo de Tratamiento -->
+                  <div class="col-md-6 mb-3">
+                    <div class="form-material">
+                        <input type="text" class="form-control" id="tiempo_tratamiento_clinico"
+                            name="dosis_tratamiento" placeholder="Dosis del Tratamiento"
+                            value="<?php echo $paciente->dosis_tratamiento ?? ''; ?>">
+                        <label for="dosis_tratamiento"><span class="text-danger">*</span>Ingresa la dosis por día y hora</label>
+                    </div>
+                </div>
+
                 <!-- Diagnóstico -->
                 <div class="col-md-6 mb-3">
                     <div class="form-material">

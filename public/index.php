@@ -8,6 +8,8 @@ use Controllers\DashboardController;
 use Controllers\SitioController;
 use Controllers\CitaController;
 use Controllers\SystemController;  // Añadir el controlador de sistema
+use Controllers\RecetaMedicaController;
+
 use MVC\Router;
 
 $router = new Router();
@@ -64,7 +66,11 @@ $router->post('/admin/pacientes/crear', [DashboardController::class, 'crear']);
 $router->get('/admin/pacientes/editar', [DashboardController::class, 'editar']);
 $router->post('/admin/pacientes/editar', [DashboardController::class, 'editar']);
 $router->post('/admin/pacientes/eliminar', [DashboardController::class, 'eliminar']);
-$router->get('/admin/receta_medica', [DashboardController::class, 'evolucion_clinica']);
+
+// En tu archivo de rutas, por ejemplo, routes.php
+$router->get('/admin/receta', [RecetaMedicaController::class, 'index']);
+
+
 $router->get('/admin/consulta_terapia_alternativa', [ConsultaAlternativaController::class, 'index']);
 $router->get('/admin/consulta_terapia_alternativa/crear', [ConsultaAlternativaController::class, 'crear']);
 $router->post('/admin/consulta_terapia_alternativa/crear', [ConsultaAlternativaController::class, 'crear']);

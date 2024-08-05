@@ -37,11 +37,13 @@ class DashboardController
             if (empty($alertas)) {
                 $existeUsuario = Usuario::where('email', $usuario->email);
                 if ($existeUsuario && $existeUsuario->id !== $usuario->id) {
-                    Usuario::setAlerta('danger', 'Email no válido, ya pertenece a otra cuenta');
+                    $alertas['danger'][] = 'Email no válido, ya pertenece a otra cuenta';
+                   
                     $alertas = $usuario->getAlertas();
                 } else {
                     $usuario->guardar();
-                    Usuario::setAlerta('success', 'Guardado Correctamente!');
+                    $alertas['success'][] = 'Guardado Correctamente!';
+                   
                     $alertas = $usuario->getAlertas();
                     $_SESSION['nombre'] = $usuario->nombre;
                     $_SESSION['apellido'] = $usuario->apellido;
@@ -75,11 +77,12 @@ class DashboardController
                     $usuario->hashPassword();
                     $resultado = $usuario->guardar();
                     if ($resultado) {
-                        Usuario::setAlerta('exito', 'Password Guardado Correctamente!');
+                        $alertas['success'][] = 'Password Guardado Correctamente!';
+                       
                         $alertas = $usuario->getAlertas();
                     }
                 } else {
-                    Usuario::setAlerta('error', 'Password Incorrecto');
+                    $alertas['danger'][] = 'Password Incorrecto';
                     $alertas = $usuario->getAlertas();
                 }
             }
@@ -123,11 +126,11 @@ class DashboardController
                 $imagen_webp->save($carpeta_imagenes . '/' . $foto_perfil . ".webp");
                 $resultado = $usuario->guardar();
                 if ($resultado) {
-                    Usuario::setAlerta('exito', 'Foto de Perfil Guardada Correctamente!');
+                    $alertas['success'][] = 'Foto de Perfil Guardada Correctamente!';
                     $alertas = $usuario->getAlertas();
                     $_SESSION['foto'] = $usuario->foto;
                 } else {
-                    Usuario::setAlerta('error', 'Foto de Perfil No Guardada');
+                    $alertas['danger'][] = 'Foto de Perfil No Guardada';
                     $alertas = $usuario->getAlertas();
                 }
             }
@@ -213,10 +216,10 @@ class DashboardController
             if (empty($alertas)) {
                 $resultado = $paciente->guardar();
                 if ($resultado) {
-                    Paciente::setAlerta('exito', 'Paciente creado correctamente!');
-                    header('Location: /dashboard/expediente');
+                    $alertas['success'][] = 'Paciente Creado correctamente!';
+                    //header('Location: admin/pacientes');
                 } else {
-                    Paciente::setAlerta('error', 'Error al crear paciente');
+                    $alertas['danger'][] = 'El Paciente no se registro correctamente!';
                 }
             } else {
                 $alertas = $paciente->getAlertas();
@@ -286,10 +289,11 @@ class DashboardController
             if (empty($alertas)) {
                 $resultado = $paciente->guardar();
                 if ($resultado) {
-                    Paciente::setAlerta('exito', 'Paciente editado correctamente!');
-                    header('Location: /dashboard/expediente');
+                    $alertas['success'][] = 'Paciente editado correctamente!';
+                   
+                   // header('Location: admin/pacientes');
                 } else {
-                    Paciente::setAlerta('error', 'Error al editar paciente');
+                    $alertas['danger'][] = 'Error al editar paciente';
                 }
             } else {
                 $alertas = $paciente->getAlertas();
@@ -326,12 +330,14 @@ class DashboardController
 
         $paciente = Paciente::find($id);
 
-        $router->render('admin/pacientes/ver', [
+        $router->render('admin/receta_medica/ver', [
             'alertas' => $alertas,
             'titulo' => 'Ver Expediente',
             'paciente' => $paciente
         ], 'admin-layout');
     }
+
+    
 
     public static function cita_programada(Router $router) {
         session_start();
