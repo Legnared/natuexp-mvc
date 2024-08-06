@@ -41,6 +41,7 @@ class LoginController
                         header('Location: /admin/dashboard');
                         exit();
                     } else {
+                        
                         Usuario::setAlerta('danger', 'Contraseña Incorrecta');
                     }
                 }
@@ -82,6 +83,7 @@ class LoginController
                 $existeUsuario = Usuario::where('email', $usuario->email);
 
                 if ($existeUsuario) {
+                    
                     Usuario::setAlerta('danger', 'El Usuario ya está registrado');
                     $alertas = Usuario::getAlertas();
                 } else {
@@ -170,7 +172,8 @@ class LoginController
         $usuario = Usuario::where('token', $token);
 
         if (empty($usuario)) {
-            Usuario::setAlerta('danger', 'Token No Válido, intenta de nuevo');
+            $alertas['danger'][] = 'Token No Válido, intenta de nuevo';
+            //Usuario::setAlerta('danger', 'Token No Válido, intenta de nuevo');
             $token_valido = false;
         }
 
@@ -229,7 +232,8 @@ class LoginController
         $usuario = Usuario::where('token', $token);
 
         if (empty($usuario)) {
-            Usuario::setAlerta('danger', 'Token No Válido, la cuenta no se confirmo');
+            $alertas['danger'][] = 'Token No Válido, la cuenta no se confirmo';
+            //Usuario::setAlerta('danger', 'Token No Válido, la cuenta no se confirmo');
         } else {
             // Confirmar la cuenta
             $usuario->confirmado = 1;

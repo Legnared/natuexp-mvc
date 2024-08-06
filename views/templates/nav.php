@@ -1,3 +1,7 @@
+<?php
+$current_page = $_SERVER['REQUEST_URI'];
+?>
+
 <!-- Sidebar Scroll Container -->
 <div id="sidebar-scroll">
     <!-- Sidebar Content -->
@@ -17,7 +21,6 @@
             <!-- Normal Mode -->
             <div class="content-header-section text-center align-parent sidebar-mini-hidden">
                 <!-- Close Sidebar, Visible only on mobile screens -->
-                <!-- Layout API, functionality initialized in Codebase() -> uiApiLayout() -->
                 <button type="button" class="btn btn-circle btn-dual-secondary d-lg-none align-v-r" data-toggle="layout"
                     data-action="sidebar_close">
                     <i class="fa fa-times text-danger"></i>
@@ -49,7 +52,7 @@
 
             <!-- Visible only in normal mode -->
             <div class="sidebar-mini-hidden-b text-center">
-                <a class="img-link" href="/admin/perfil/cambiar-foto">
+                <a class="img-link" href="/admin/system/perfil/cambiar-foto">
                     <img class="img-avatar"
                         src="<?php echo $_ENV['HOST'] . '/img/photosperfil/' . $_SESSION["foto"]; ?>.png"
                         alt="Foto Perfil">
@@ -60,7 +63,6 @@
                             href="/admin/perfil"><?php echo $_SESSION["nombre"]; ?></a>
                     </li>
                     <li class="list-inline-item">
-                        <!-- Layout API, functionality initialized in Codebase() -> uiApiLayout() -->
                         <a class="link-effect text-dual-primary-dark" data-toggle="layout"
                             data-action="sidebar_style_inverse_toggle" href="javascript:void(0)">
                             <i class="si si-drop"></i>
@@ -82,67 +84,83 @@
         <!-- Side Navigation -->
         <div class="content-side content-side-full">
             <ul class="nav-main">
-                <li>
-                    <a href="/admin/dashboard"><i class="fa fa-dashboard"></i><span
-                            class="sidebar-mini-hide">Inicio</span></a>
+                <li class="<?php echo ($current_page == '/admin/dashboard') ? 'open' : ''; ?>">
+                    <a href="/admin/dashboard" class="<?php echo ($current_page == '/admin/dashboard') ? 'active' : ''; ?>">
+                        <i class="fa fa-dashboard"></i><span class="sidebar-mini-hide">Inicio</span>
+                    </a>
                 </li>
 
                 <?php if ($_SESSION["perfil"] == "admin") : ?>
-                <li class="nav-main-heading"><span class="sidebar-mini-visible"></span><span
-                        class="sidebar-mini-hidden">Consultas y Citas</span></li>
-                <li>
-                    <a class="nav-submenu" data-toggle="nav-submenu" href="#"><i class="si si-calendar"></i><span
-                            class="sidebar-mini-hide">Consultas y Citas</span></a>
+                <li class="nav-main-heading"><span class="sidebar-mini-visible"></span><span class="sidebar-mini-hidden">Consultas y Citas</span></li>
+                <li class="<?php echo (strpos($current_page, '/admin/cita') !== false || strpos($current_page, '/admin/pacientes') !== false || strpos($current_page, '/admin/historico') !== false) ? 'open' : ''; ?>">
+                    <a class="nav-submenu <?php echo (strpos($current_page, '/admin/cita') !== false || strpos($current_page, '/admin/pacientes') !== false || strpos($current_page, '/admin/historico') !== false) ? 'active' : ''; ?>" data-toggle="nav-submenu" href="#">
+                        <i class="si si-calendar"></i><span class="sidebar-mini-hide">Consultas y Citas</span>
+                    </a>
                     <ul>
                         <li>
-                            <a href="/admin/cita_programada"><span class="sidebar-mini-hide">Citas
-                                    Programadas</span></a>
+                            <a href="/admin/cita_programada" class="<?php echo ($current_page == '/admin/cita_programada') ? 'active' : ''; ?>">
+                                <span class="sidebar-mini-hide">Citas Programadas</span>
+                            </a>
                         </li>
                         <li>
-                            <a href="/admin/pacientes"><span class="sidebar-mini-hide">Pacientes</span></a>
+                            <a href="/admin/pacientes" class="<?php echo ($current_page == '/admin/pacientes') ? 'active' : ''; ?>">
+                                <span class="sidebar-mini-hide">Pacientes</span>
+                            </a>
                         </li>
                         <li>
-                            <a href="/admin/cita"><span class="sidebar-mini-hide">Citas</span></a>
+                            <a href="/admin/cita" class="<?php echo ($current_page == '/admin/cita') ? 'active' : ''; ?>">
+                                <span class="sidebar-mini-hide">Citas</span>
+                            </a>
                         </li>
                         <li>
-                            <a href="/admin/historico"><span class="sidebar-mini-hide">Historico</span></a>
+                            <a href="/admin/historico" class="<?php echo ($current_page == '/admin/historico') ? 'active' : ''; ?>">
+                                <span class="sidebar-mini-hide">Historico</span>
+                            </a>
                         </li>
                     </ul>
                 </li>
                 <?php endif ?>
-                <li class="nav-main-heading"><span class="sidebar-mini-visible">C</span><span
-                        class="sidebar-mini-hidden">Sistema</span></li>
-                <li>
-                    <a class="nav-submenu" data-toggle="nav-submenu" href="#"><i class="fa fa-cogs"></i><span
-                            class="sidebar-mini-hide">Sistema</span></a>
+                
+                <li class="nav-main-heading"><span class="sidebar-mini-visible">C</span><span class="sidebar-mini-hidden">Sistema</span></li>
+                <li class="<?php echo (strpos($current_page, '/admin/system') !== false) ? 'open' : ''; ?>">
+                    <a class="nav-submenu <?php echo (strpos($current_page, '/admin/system') !== false) ? 'active' : ''; ?>" data-toggle="nav-submenu" href="#">
+                        <i class="fa fa-cogs"></i><span class="sidebar-mini-hide">Sistema</span>
+                    </a>
                     <ul>
                         <li>
-                            <a href="/admin/system/perfil"><span
-                                    class="sidebar-mini-hide">Perfil</span></a>
+                            <a href="/admin/system/perfil" class="<?php echo ($current_page == '/admin/system/perfil') ? 'active' : ''; ?>">
+                                <span class="sidebar-mini-hide">Perfil</span>
+                            </a>
                         </li>
                         <li>
-                            <a href="/admin/system/configuracion"><span
-                                    class="sidebar-mini-hide">Configuración</span></a>
+                            <a href="/admin/system/configuracion" class="<?php echo ($current_page == '/admin/system/configuracion') ? 'active' : ''; ?>">
+                                <span class="sidebar-mini-hide">Configuración</span>
+                            </a>
                         </li>
                         <li>
-                            <a href="/admin/system/usuarios"><span class="sidebar-mini-hide">Gestión
-                                    de Usuarios</span></a>
+                            <a href="/admin/system/usuarios" class="<?php echo ($current_page == '/admin/system/usuarios') ? 'active' : ''; ?>">
+                                <span class="sidebar-mini-hide">Gestión de Usuarios</span>
+                            </a>
                         </li>
                         <li>
-                            <a href="/admin/system/roles"><span class="sidebar-mini-hide">Gestión de
-                                    Roles</span></a>
+                            <a href="/admin/system/roles" class="<?php echo ($current_page == '/admin/system/roles') ? 'active' : ''; ?>">
+                                <span class="sidebar-mini-hide">Gestión de Roles</span>
+                            </a>
                         </li>
                         <li>
-                            <a href="/admin/system/logs"><span class="sidebar-mini-hide">Logs del
-                                    Sistema</span></a>
+                            <a href="/admin/system/logs" class="<?php echo ($current_page == '/admin/system/logs') ? 'active' : ''; ?>">
+                                <span class="sidebar-mini-hide">Logs del Sistema</span>
+                            </a>
                         </li>
                         <li>
-                            <a href="/admin/system/backup"><span
-                                    class="sidebar-mini-hide">Respaldo de Datos</span></a>
+                            <a href="/admin/system/backup" class="<?php echo ($current_page == '/admin/system/backup') ? 'active' : ''; ?>">
+                                <span class="sidebar-mini-hide">Respaldo de Datos</span>
+                            </a>
                         </li>
                         <li>
-                            <a href="/admin/system/notificaciones"><span
-                                    class="sidebar-mini-hide">Notificaciones</span></a>
+                            <a href="/admin/system/notificaciones" class="<?php echo ($current_page == '/admin/system/notificaciones') ? 'active' : ''; ?>">
+                                <span class="sidebar-mini-hide">Notificaciones</span>
+                            </a>
                         </li>
                     </ul>
                 </li>
