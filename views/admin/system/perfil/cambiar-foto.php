@@ -1,5 +1,5 @@
 <h2 class="content-heading d-print-none">
-    <a href="/admin/perfil" class="btn btn-alt-primary float-left">
+    <a href="/admin/system/perfil" class="btn btn-alt-primary float-left">
         Regresar <i class="si si-action-undo ml-5"></i>
     </a>
 </h2>
@@ -9,8 +9,8 @@
 <div class="block">
     <div class="block-content">
         <div class="col-xl-12">
-            <?php include_once __DIR__ . '/../../templates/alertas.php'; ?>
-            <form class="js-validation-material" method="POST" enctype="multipart/form-data" action="/admin/perfil/cambiar-foto">
+            <?php include_once __DIR__ . '/../../../template/alerta.php'; ?>
+            <form class="js-validation-material" method="POST" enctype="multipart/form-data" action="/admin/system/perfil/cambiar-foto">
                 <div class="form-group">
                     <div class="form-material">
                         <input type="file" class="form-control" id="foto" name="foto" accept=".jpg, .png, .webp">

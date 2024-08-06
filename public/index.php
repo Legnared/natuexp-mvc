@@ -54,12 +54,7 @@ $router->post('/privacy', [SitioController::class, 'privacy']);
 // Zona de Administrador
 $router->get('/admin/dashboard', [DashboardController::class, 'index']);
 $router->post('/admin/dashboard/logout', [DashboardController::class, 'logout']);
-$router->get('/admin/perfil', [DashboardController::class, 'perfil']);
-$router->post('/admin/perfil', [DashboardController::class, 'perfil']);
-$router->get('/admin/perfil/cambiar-password', [DashboardController::class, 'cambiarPassowrd']);
-$router->post('/admin/perfil/cambiar-password', [DashboardController::class, 'cambiarPassowrd']);
-$router->get('/admin/perfil/cambiar-foto', [DashboardController::class, 'cambiarFoto']);
-$router->post('/admin/perfil/cambiar-foto', [DashboardController::class, 'cambiarFoto']);
+
 $router->get('/admin/pacientes', [DashboardController::class, 'expediente']);
 $router->get('/admin/pacientes/crear', [DashboardController::class, 'crear']);
 $router->post('/admin/pacientes/crear', [DashboardController::class, 'crear']);
@@ -96,6 +91,14 @@ $router->get('/admin/system/roles', [SystemController::class, 'gestionRoles']);
 $router->get('/admin/system/logs', [SystemController::class, 'logs']);
 $router->get('/admin/system/backup', [SystemController::class, 'respaldo']);
 $router->get('/admin/system/notificaciones', [SystemController::class, 'notificaciones']);
+
+$router->get('/admin/system/perfil/', [SystemController::class, 'perfil']);
+$router->post('/admin/system/perfil/', [SystemController::class, 'perfil']);
+$router->get('/admin/system/perfil/cambiar-password', [SystemController::class, 'cambiarPassword']); // Cambiar aquí
+$router->post('/admin/system/perfil/cambiar-password', [SystemController::class, 'cambiarPassword']); // Cambiar aquí
+$router->get('/admin/system/perfil/cambiar-foto', [SystemController::class, 'cambiarFoto']);
+$router->post('/admin/system/perfil/cambiar-foto', [SystemController::class, 'cambiarFoto']);
+
 
 
 // Página de Error pagina no encontrada
