@@ -72,6 +72,24 @@
                     </div>
                 </div>
 
+                <!-- Telefono del Paciente -->
+                <div class="col-md-6 mb-3">
+                    <div class="form-material">
+                        <input type="number" class="form-control" id="telefono" name="telefono" placeholder="Teléfono"
+                            value="<?php echo $paciente->telefono ?? ''; ?>">
+                        <label for="telefono"><span class="text-danger">*</span>Teléfono del Paciente</label>
+                    </div>
+                </div>
+
+                <!-- Correo del Paciente -->
+                <div class="col-md-6 mb-3">
+                    <div class="form-material">
+                        <input type="email" class="form-control" id="correo" name="correo"
+                            placeholder="Correo Electrónico" value="<?php echo $paciente->correo ?? ''; ?>">
+                        <label for="correo"><span class="text-danger">*</span>Correo Electrónico del Paciente</label>
+                    </div>
+                </div>
+
                 <!-- Presión Arterial -->
                 <div class="col-md-6 mb-3">
                     <div class="form-material">
@@ -130,32 +148,59 @@
             <div class="row">
                 <!-- Antecedentes Médicos -->
                 <?php 
-                $antecedentes = [
-                    "diabetes" => "Diabetes",
-                    "cancer" => "Cáncer",
-                    "obesidad" => "Obesidad",
-                    "infartos" => "Infartos",
-                    "alergias" => "Alergias",
-                    "depresion" => "Depresión",
-                    "artritis" => "Artritis",
-                    "estrenimiento" => "Estreñimiento",
-                    "gastritis" => "Gastritis",
-                    "comida_chatarra" => "Comida Chatarra",
-                    "fumas" => "Fumas",
-                    "bebes" => "Bebes",
-                    "cirugias" => "Cirugías",
-                    "embarazos" => "Embarazos",
-                    "abortos" => "Abortos"
-                ];
-                foreach ($antecedentes as $id => $label) { ?>
+    $antecedentes = [
+        "diabetes" => "Diabetes",
+        "cancer" => "Cáncer",
+        "obesidad" => "Obesidad",
+        "infartos" => "Infartos",
+        "alergias" => "Alergias",
+        "depresion" => "Depresión",
+        "artritis" => "Artritis",
+        "estrenimiento" => "Estreñimiento",
+        "gastritis" => "Gastritis",
+        "comida_chatarra" => "Comida Chatarra",
+        "fumas" => "Fumas",
+        "bebes" => "Bebes",
+        "cirugias" => "Cirugías",
+        "embarazos" => "Embarazos",
+        "abortos" => "Abortos"
+    ];
+    foreach ($antecedentes as $id => $label) { ?>
                 <div class="col-md-3 mb-4">
                     <div class="form-material">
                         <input type="checkbox" class="form-check-input" id="<?php echo $id; ?>"
-                            name="<?php echo $id; ?>" value="1" <?php echo ($paciente->$id == '1') ? 'checked' : ''; ?>>
+                            name="<?php echo $id; ?>" value="1" <?php echo ($paciente->$id == '1') ? 'checked' : ''; ?>
+                            onclick="toggleField('<?php echo $id; ?>')">
                         <label class="form-check-label" for="<?php echo $id; ?>"><?php echo $label; ?></label>
                     </div>
                 </div>
                 <?php } ?>
+            </div>
+
+            <!-- Campos adicionales -->
+            <div id="cirugias_fields" class="row" style="display: none;">
+                <div class="col-md-6 mb-4">
+                    <label for="num_cirugias">Número de cirugías:</label>
+                    <input type="number" class="form-control" id="num_cirugias" name="num_cirugias">
+                </div>
+                <div class="col-md-6 mb-4">
+                    <label for="desc_cirugias">Descripción de cirugías:</label>
+                    <textarea class="form-control" id="desc_cirugias" name="desc_cirugias"></textarea>
+                </div>
+            </div>
+
+            <div id="embarazos_fields" class="row" style="display: none;">
+                <div class="col-md-6 mb-4">
+                    <label for="num_embarazos">Número de embarazos:</label>
+                    <input type="number" class="form-control" id="num_embarazos" name="num_embarazos">
+                </div>
+            </div>
+
+            <div id="abortos_fields" class="row" style="display: none;">
+                <div class="col-md-6 mb-4">
+                    <label for="num_abortos">Número de abortos:</label>
+                    <input type="number" class="form-control" id="num_abortos" name="num_abortos">
+                </div>
             </div>
 
             <div class="row">
@@ -189,24 +234,26 @@
                     </div>
                 </div>
 
-                  <!-- Tiempo de Tratamiento -->
-                  <div class="col-md-6 mb-3">
+                <!-- Tiempo de Tratamiento -->
+                <div class="col-md-6 mb-3">
                     <div class="form-material">
                         <input type="text" class="form-control" id="tiempo_tratamiento_clinico"
                             name="tiempo_tratamiento_sujerido" placeholder="Tiempo de tratamiento sugerido"
                             value="<?php echo $paciente->tiempo_tratamiento_sujerido ?? ''; ?>">
-                        <label for="tiempo_tratamiento_sujerido"><span class="text-danger">*</span>Tiempo de Tratamiento Sugerido</label>
+                        <label for="tiempo_tratamiento_sujerido"><span class="text-danger">*</span>Tiempo de Tratamiento
+                            Sugerido</label>
                     </div>
                 </div>
 
-                
-                  <!-- Tiempo de Tratamiento -->
-                  <div class="col-md-6 mb-3">
+
+                <!-- Tiempo de Tratamiento -->
+                <div class="col-md-6 mb-3">
                     <div class="form-material">
-                        <input type="text" class="form-control" id="tiempo_tratamiento_clinico"
-                            name="dosis_tratamiento" placeholder="Dosis del Tratamiento"
+                        <input type="text" class="form-control" id="tiempo_tratamiento_clinico" name="dosis_tratamiento"
+                            placeholder="Dosis del Tratamiento"
                             value="<?php echo $paciente->dosis_tratamiento ?? ''; ?>">
-                        <label for="dosis_tratamiento"><span class="text-danger">*</span>Ingresa la dosis por día y hora</label>
+                        <label for="dosis_tratamiento"><span class="text-danger">*</span>Ingresa la dosis por día y
+                            hora</label>
                     </div>
                 </div>
 
@@ -334,4 +381,28 @@ function mostrarNota() {
         notaEdad.style.display = 'none';
     }, 1000);
 }
+
+function toggleField(id) {
+    const fields = {
+        'cirugias': 'cirugias_fields',
+        'embarazos': 'embarazos_fields',
+        'abortos': 'abortos_fields'
+    };
+
+    if (fields[id]) {
+        const fieldSet = document.getElementById(fields[id]);
+        if (document.getElementById(id).checked) {
+            fieldSet.style.display = 'block';
+        } else {
+            fieldSet.style.display = 'none';
+        }
+    }
+}
+
+// Verifica si alguna casilla ya está marcada al cargar la página
+document.addEventListener('DOMContentLoaded', () => {
+    toggleField('cirugias');
+    toggleField('embarazos');
+    toggleField('abortos');
+});
 </script>

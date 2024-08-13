@@ -19,6 +19,19 @@ class ActiveRecord
         self::$db = $database;
     }
 
+
+    // Preparar consultas SQL
+    protected static function prepare($query) {
+        return self::$db->prepare($query);
+    }
+
+  
+
+    // Escapar cadenas
+    protected static function escape_string($string) {
+        return self::$db->quote($string);
+    }
+
     // Setear un tipo de Alerta
     public static function setAlerta($tipo, $mensaje)
     {
@@ -368,4 +381,32 @@ class ActiveRecord
         $resultado = self::$db->query($query);
         return $resultado;
     }
+
+     // Función para contar registros por una columna
+     public static function countByColumn($tabla, $columna, $valor)
+     {
+         // Asegúrate de que la conexión esté establecida
+         if (!self::$db) {
+             die('No hay conexión a la base de datos.');
+         }
+ 
+         // Escapar el valor para evitar inyecciones SQL
+         $valor = self::$db->escape_string($valor);
+ 
+         // Construir y ejecutar la consulta SQL
+         $query = "SELECT COUNT(*) AS total FROM ${tabla} WHERE ${columna} = '${valor}'";
+         $resultado = self::$db->query($query);
+ 
+         // Verificar si la consulta fue exitosa
+         if (!$resultado) {
+             die('Error en la consulta: ' . self::$db->error);
+         }
+ 
+         // Obtener el resultado y retornar el conteo total
+         $total = $resultado->fetch_array();
+         return (int)$total['total'];
+     }
+
+
+
 }

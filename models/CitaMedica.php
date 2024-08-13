@@ -71,6 +71,9 @@ class CitaMedica extends ActiveRecord {
 
         return $alertas;
     }
+    
+    
+    
 
     // Obtener todas las citas
     public static function todas() {

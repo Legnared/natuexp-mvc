@@ -3,6 +3,7 @@
 namespace Controllers;
 
 use Model\Paciente;
+use Model\Cita; 
 use Model\CitaMedica;
 use Model\Sexo;
 use Model\Usuario;
@@ -16,12 +17,24 @@ class DashboardController
         session_start();
         isAuth();
 
+        $usuario_id = $_SESSION['id'];
+        $alertas = [];
+
+        // Obtener el número total de citas del usuario
+        $totalCitas = Cita::countByColumn('citas', 'paciente_id', $usuario_id);
+
+        // Obtener el número total de pacientes
+        $pacientes = Paciente::pacientesPorUsuario($usuario_id);
+        $totalPacientes = count($pacientes);
+
         $router->render('admin/dashboard/index', [
             'titulo' => 'Panel de Administración',
-            'subtitulo' => 'Revisión Médica'
+            'subtitulo' => 'Revisión Médica',
+            'pacientes' => $pacientes,
+            'totalPacientes' => $totalPacientes,
+            'totalCitas' => $totalCitas // Pasar el conteo de citas
         ], 'admin-layout');
     }
-
     
 
    
@@ -61,6 +74,10 @@ class DashboardController
             $_POST['estatura'] = $estatura;
             $_POST['usuario_id'] = $_SESSION['id'];
             $_POST['url_avance'] = md5(uniqid(rand(), true));
+
+             // Fecha de creación
+            $_POST['fecha_creacion'] = date('Y-m-d H:i:s');
+
 
             $checkboxes = ['diabetes', 'cancer', 'obesidad', 'infartos', 'alergias', 'depresion', 'artritis', 'estrenimiento', 'gastritis', 'comida_chatarra', 'fumas', 'bebes', 'cirugias', 'embarazos', 'abortos'];
             foreach ($checkboxes as $checkbox) {
@@ -141,6 +158,9 @@ class DashboardController
                 $_POST[$checkbox] = isset($_POST[$checkbox]) ? 1 : 0;
             }
 
+            // Fecha de modificación
+            $_POST['fecha_modificacion'] = date('Y-m-d H:i:s');
+
             $paciente->sincronizar($_POST);
 
             if (!empty($_FILES['expediente_file']['tmp_name'])) {
@@ -199,6 +219,8 @@ class DashboardController
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $paciente = Paciente::find($id);
+             // Fecha de eliminación
+            $paciente->fecha_eliminacion = date('Y-m-d H:i:s');
             $paciente->eliminar();
             header('Location: /dashboard/expediente');
         }

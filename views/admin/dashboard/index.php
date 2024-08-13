@@ -32,7 +32,7 @@
                         <i class="fa fa-users text-info"></i>
                     </div>
                     <div class="font-size-h4 font-w600">Total Pacientes</div>
-                    <div class="text-muted">123</div> <!-- Actualiza el número con datos reales -->
+                    <div class="text-muted"><?php echo $totalPacientes; ?></div> <!-- Muestra el número de pacientes -->
                 </div>
             </div>
         </div>
@@ -43,8 +43,8 @@
                     <div class="item item-circle bg-success-light mx-auto mb-20">
                         <i class="fa fa-calendar-alt text-success"></i>
                     </div>
-                    <div class="font-size-h4 font-w600">Citas Hoy</div>
-                    <div class="text-muted">5</div> <!-- Actualiza el número con datos reales -->
+                    <div class="font-size-h4 font-w600">Total Citas</div>
+                    <div class="text-muted"><?php echo $totalCitas; ?></div> <!-- Muestra el número de citas -->
                 </div>
             </div>
         </div>
@@ -62,34 +62,3 @@
         </div>
     </div>
 </div>
-
-<!-- Chart Section -->
-<div class="col-md-12 text-center mt-4">
-    <canvas id="graficoPacientes" width="400" height="200"></canvas>
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    var ctx = document.getElementById('graficoPacientes').getContext('2d');
-    var myChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio'],
-            datasets: [{
-                label: 'Pacientes Registrados',
-                data: [12, 19, 3, 5, 2, 3], // Aquí puedes poner los datos reales de tu backend
-                backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
-});
-</script>

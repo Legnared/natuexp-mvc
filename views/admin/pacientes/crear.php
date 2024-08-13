@@ -13,7 +13,7 @@
         </div>
         <div class="row justify-content-center py-20">
             <div class="col-xl">
-                <?php include_once __DIR__ . '/../../templates/alertas.php'; ?>
+                <?php include_once __DIR__ . '/../../template/alerta.php'; ?>
                 <form class="js-validation-material" id="paciente_form" method="POST" enctype="multipart/form-data" action="/admin/pacientes/crear">
                     <?php include_once __DIR__ . '/formulario.php'; ?>
 

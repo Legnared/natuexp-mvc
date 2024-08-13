@@ -40,6 +40,8 @@ class Cita extends ActiveRecord {
         return $alertas;
     }
 
+    
+
     // Obtener todas las citas con datos del paciente usando JOIN, filtradas por usuario_id
     public static function todos($usuario_id) {
         $query = "SELECT c.*, p.nombre AS nombre_paciente, p.apellidos AS apellidos_paciente 

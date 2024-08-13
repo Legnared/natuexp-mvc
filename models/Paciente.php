@@ -6,9 +6,9 @@ namespace Model;
 class Paciente extends ActiveRecord {
     protected static $tabla = 'pacientes';
     protected static $columnasDB = [
-        'id', 'nombre', 'apellidos', 'edad', 'motivo_consulta', 
-        'tratamiento_sujerido', 'tiempo_tratamiento_clinico', 
-        'tiempo_tratamiento_sujerido','diagnostico', 'observaciones', 'dosis_tratamiento', 'expediente_file', 
+        'id', 'nombre', 'apellidos', 'edad', 'telefono', 'correo', 'motivo_consulta', 
+        'tratamiento_sujerido', 'tiempo_tratamiento_clinico', 'tiempo_tratamiento_sujerido', 
+        'diagnostico', 'observaciones', 'dosis_tratamiento', 'expediente_file', 
         'sexo_id', 'usuario_id', 'url_avance', 'estatus', 'fecha_creacion', 
         'fecha_modificacion', 'fecha_eliminacion', 'fecha_nacimiento', 
         'n_calle_avenida', 'n_exterior', 'n_interior', 'colonia_barrio', 
@@ -16,13 +16,16 @@ class Paciente extends ActiveRecord {
         'presion_arterial', 'nivel_azucar', 'peso', 'estatura', 'temperatura',
         'diabetes', 'cancer', 'obesidad', 'infartos', 'alergias', 
         'depresion', 'artritis', 'estrenimiento', 'gastritis', 
-        'comida_chatarra', 'fumas', 'bebes', 'cirugias', 'embarazos', 'abortos'
+        'comida_chatarra', 'fumas', 'bebes', 'cirugias', 'embarazos', 'abortos',
+        'num_cirugias', 'desc_cirugias', 'num_embarazos', 'num_abortos'
     ];
 
     public $id;
     public $nombre;
     public $apellidos;
     public $edad;
+    public $correo;
+    public $telefono;
     public $motivo_consulta;
     public $tratamiento_sujerido;
     public $tiempo_tratamiento_clinico;
@@ -52,6 +55,7 @@ class Paciente extends ActiveRecord {
 
     public $diagnostico;
     public $observaciones;
+
     // Añadir nuevos campos de antecedentes
     public $diabetes;
     public $cancer;
@@ -69,11 +73,19 @@ class Paciente extends ActiveRecord {
     public $embarazos;
     public $abortos;
 
+      // Nuevos campos para detalles adicionales
+      public $num_cirugias;
+      public $desc_cirugias;
+      public $num_embarazos;
+      public $num_abortos;
+
     public function __construct($args = []) {
         $this->id = $args['id'] ?? null;
         $this->nombre = htmlspecialchars($args['nombre'] ?? '', ENT_QUOTES, 'UTF-8');
         $this->apellidos = htmlspecialchars($args['apellidos'] ?? '', ENT_QUOTES, 'UTF-8');
         $this->edad = $args['edad'] ?? '';
+        $this->telefono = $args['telefono'] ?? null;
+        $this->correo = htmlspecialchars($args['correo'] ?? '', ENT_QUOTES, 'UTF-8');
         $this->motivo_consulta = htmlspecialchars($args['motivo_consulta'] ?? '', ENT_QUOTES, 'UTF-8');
         $this->tratamiento_sujerido = htmlspecialchars($args['tratamiento_sujerido'] ?? '', ENT_QUOTES, 'UTF-8');
         $this->tiempo_tratamiento_clinico = $args['tiempo_tratamiento_clinico'] ?? '';
@@ -119,6 +131,13 @@ class Paciente extends ActiveRecord {
         $this->cirugias = $args['cirugias'] ?? '';
         $this->embarazos = $args['embarazos'] ?? '';
         $this->abortos = $args['abortos'] ?? '';
+
+           // Inicializar campos adicionales
+        $this->num_cirugias = $args['num_cirugias'] ?? '';
+        $this->desc_cirugias = htmlspecialchars($args['desc_cirugias'] ?? '', ENT_QUOTES, 'UTF-8');
+        $this->num_embarazos = $args['num_embarazos'] ?? '';
+        $this->num_abortos = $args['num_abortos'] ?? '';
+    
     }
 
     // Método para calcular la edad
@@ -188,6 +207,8 @@ class Paciente extends ActiveRecord {
             }
         }
     }
+
+    
 
     // Método para obtener pacientes por usuario_id
     public static function pacientesPorUsuario($usuario_id) {
