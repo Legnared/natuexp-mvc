@@ -5,6 +5,7 @@ namespace Controllers;
 use MVC\Router;
 use Model\Contacto;
 use Model\CitaMedica;
+use Classes\Email;
 
 class SitioController {
 
@@ -119,7 +120,11 @@ class SitioController {
                 $resultado = $cita->guardar();
     
                 if ($resultado) {
-                    $alertas['success'][] = 'La cita se ha agendado correctamente.';
+                    // Configurar y enviar la notificación al usuario
+                    $email = new Email($cita->email, $cita->nombre, '');
+                    $email->enviarNotificacionCita();
+    
+                    $alertas['success'][] = 'La cita se ha agendado correctamente. Se ha enviado una notificación a tu correo.';
                 } else {
                     $alertas['danger'][] = 'Hubo un error al agendar la cita.';
                 }
@@ -131,6 +136,7 @@ class SitioController {
             'alertas' => $alertas
         ], 'site-layout');
     }
+    
     
     
 }

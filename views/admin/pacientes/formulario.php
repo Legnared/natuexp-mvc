@@ -116,7 +116,9 @@
                             centímetros)</label>
                         <div class="input-group ml-3">
                             <input type="number" class="form-control" id="metros" name="metros" placeholder="Metros"
-                                style="max-width: 250px;" value="<?php echo isset($metros) ? $metros : ''; ?>">
+                                style="max-width: 250px;"
+                                value="<?php echo isset($paciente->metros) ? $paciente->metros : ''; ?>"
+                                oninput="calcularEstatura()">
                             <div class="input-group-append">
                                 <span class="input-group-text">m</span>
                             </div>
@@ -124,13 +126,21 @@
                         <div class="input-group ml-3">
                             <input type="number" class="form-control" id="centimetros" name="centimetros"
                                 placeholder="Centímetros" style="max-width: 250px;"
-                                value="<?php echo isset($centimetros) ? $centimetros : ''; ?>">
+                                value="<?php echo isset($paciente->centimetros) ? $paciente->centimetros : ''; ?>"
+                                oninput="calcularEstatura()">
                             <div class="input-group-append">
                                 <span class="input-group-text">cm</span>
                             </div>
                         </div>
+                        <div class="input-group ml-3">
+                            <input type="text" class="form-control" id="estatura" name="estatura" readonly
+                                placeholder="Estatura Total" style="max-width: 250px;">
+                        </div>
                     </div>
                 </div>
+
+
+
 
                 <!-- Temperatura Corporal -->
                 <div class="col-md-6 mb-3">
@@ -145,7 +155,7 @@
 
             <legend>Datos de Consulta & Antecedentes</legend>
 
-            <div class="row">
+            <div class="row justify-content-center">
                 <!-- Antecedentes Médicos -->
                 <?php 
     $antecedentes = [
@@ -166,8 +176,8 @@
         "abortos" => "Abortos"
     ];
     foreach ($antecedentes as $id => $label) { ?>
-                <div class="col-md-3 mb-4">
-                    <div class="form-material">
+                <div class="col-md-3 col-6 mb-4 text-center">
+                    <div class="form-check">
                         <input type="checkbox" class="form-check-input" id="<?php echo $id; ?>"
                             name="<?php echo $id; ?>" value="1" <?php echo ($paciente->$id == '1') ? 'checked' : ''; ?>
                             onclick="toggleField('<?php echo $id; ?>')">
@@ -177,31 +187,38 @@
                 <?php } ?>
             </div>
 
+
             <!-- Campos adicionales -->
             <div id="cirugias_fields" class="row" style="display: none;">
-                <div class="col-md-6 mb-4">
+                <div class="col-md-6 mb-3">
                     <label for="num_cirugias">Número de cirugías:</label>
-                    <input type="number" class="form-control" id="num_cirugias" name="num_cirugias">
+                    <input type="number" class="form-control" id="num_cirugias" name="num_cirugias"
+                        value="<?php echo isset($paciente->num_cirugias) ? htmlspecialchars($paciente->num_cirugias) : ''; ?>">
                 </div>
-                <div class="col-md-6 mb-4">
+                <div class="col-md-6 mb-3">
                     <label for="desc_cirugias">Descripción de cirugías:</label>
-                    <textarea class="form-control" id="desc_cirugias" name="desc_cirugias"></textarea>
+                    <textarea class="form-control" id="desc_cirugias"
+                        name="desc_cirugias"><?php echo isset($paciente->desc_cirugias) ? htmlspecialchars($paciente->desc_cirugias) : ''; ?></textarea>
                 </div>
             </div>
 
             <div id="embarazos_fields" class="row" style="display: none;">
-                <div class="col-md-6 mb-4">
+                <div class="col-md-6 mb-3">
                     <label for="num_embarazos">Número de embarazos:</label>
-                    <input type="number" class="form-control" id="num_embarazos" name="num_embarazos">
+                    <input type="number" class="form-control" id="num_embarazos" name="num_embarazos"
+                        value="<?php echo isset($paciente->num_embarazos) ? htmlspecialchars($paciente->num_embarazos) : ''; ?>">
                 </div>
             </div>
 
             <div id="abortos_fields" class="row" style="display: none;">
-                <div class="col-md-6 mb-4">
+                <div class="col-md-6 mb-3">
                     <label for="num_abortos">Número de abortos:</label>
-                    <input type="number" class="form-control" id="num_abortos" name="num_abortos">
+                    <input type="number" class="form-control" id="num_abortos" name="num_abortos"
+                        value="<?php echo isset($paciente->num_abortos) ? htmlspecialchars($paciente->num_abortos) : ''; ?>">
                 </div>
             </div>
+
+
 
             <div class="row">
                 <!-- Motivo de Consulta -->
@@ -277,23 +294,30 @@
 
                 <div class="col-md-6 mb-3">
                     <div class="form-material">
+                        <!-- Campo para cargar un nuevo archivo -->
                         <input type="file" class="form-control" id="expediente_file" name="expediente_file"
                             accept=".pdf,.docx,.doc" multiple>
-                        <label for="expediente_file"><span class="text-danger">*</span>Expediente Médico</label>
+                        <label for="expediente_file">
+                            <span class="text-danger">*</span> Expediente Médico
+                        </label>
                     </div>
                 </div>
 
-                <?php if (isset($paciente->expediente_actual)) { ?>
+                <?php if (isset($paciente->expediente_file) && $paciente->expediente_file) { ?>
                 <div class="col-md-12 mb-3">
                     <div class="form-material">
-                        <label for="expediente_file"><span class="text-danger">*</span>Expediente Médico
-                            Actual:</label><br>
+                        <!-- Mostrar el archivo actual -->
+                        <label for="expediente_file">
+                            <span class="text-danger">*</span> Expediente Médico Actual:
+                        </label><br>
                         <a href="<?php echo $_ENV['HOST'] . '/docs/patients/' . $paciente->expediente_file; ?>"
-                            class="btn btn-rounded btn-outline-primary" target="_black"><i
-                                class="fa fa-file-pdf-o mr-5"></i>Click aquí para ver el Expediente actual</a>
+                            class="btn btn-rounded btn-outline-primary" target="_blank">
+                            <i class="fa fa-file-pdf-o mr-5"></i> Click aquí para ver el Expediente actual
+                        </a>
                     </div>
                 </div>
                 <?php } ?>
+
 
 
                 <legend>Domicilio del Paciente</legend>
@@ -371,15 +395,19 @@ function calcularEdad() {
             edad--;
         }
         document.getElementById('edad').value = edad;
+    } else {
+        document.getElementById('edad').value = '';
     }
 }
 
 function mostrarNota() {
     const notaEdad = document.getElementById('notaEdad');
-    notaEdad.style.display = 'block';
-    setTimeout(() => {
-        notaEdad.style.display = 'none';
-    }, 1000);
+    if (notaEdad) {
+        notaEdad.style.display = 'block';
+        setTimeout(() => {
+            notaEdad.style.display = 'none';
+        }, 1000);
+    }
 }
 
 function toggleField(id) {
@@ -391,10 +419,9 @@ function toggleField(id) {
 
     if (fields[id]) {
         const fieldSet = document.getElementById(fields[id]);
-        if (document.getElementById(id).checked) {
-            fieldSet.style.display = 'block';
-        } else {
-            fieldSet.style.display = 'none';
+        const checkbox = document.getElementById(id);
+        if (checkbox && fieldSet) {
+            fieldSet.style.display = checkbox.checked ? 'block' : 'none';
         }
     }
 }
@@ -404,5 +431,23 @@ document.addEventListener('DOMContentLoaded', () => {
     toggleField('cirugias');
     toggleField('embarazos');
     toggleField('abortos');
+
+    // Asocia el evento de cambio a los checkboxes
+    document.getElementById('cirugias').addEventListener('change', () => toggleField('cirugias'));
+    document.getElementById('embarazos').addEventListener('change', () => toggleField('embarazos'));
+    document.getElementById('abortos').addEventListener('change', () => toggleField('abortos'));
+});
+
+function calcularEstatura() {
+    const metros = parseFloat(document.getElementById('metros').value) || 0;
+    const centimetros = parseFloat(document.getElementById('centimetros').value) || 0;
+    const estaturaTotal = metros + (centimetros / 100);
+    document.getElementById('estatura').value = estaturaTotal.toFixed(2);
+}
+
+
+// Inicializar estatura al cargar la página si ya hay valores
+document.addEventListener('DOMContentLoaded', () => {
+    calcularEstatura();
 });
 </script>

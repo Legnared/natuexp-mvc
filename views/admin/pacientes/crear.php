@@ -25,3 +25,11 @@
         </div>
     </div>
 </div>
+<?php if (isset($_SESSION['redirect'])): ?>
+<script>
+    setTimeout(function() {
+        window.location.href = "<?php echo $_SESSION['redirect']; ?>";
+    }, 5000); // Redirige después de 5 segundos
+</script>
+<?php unset($_SESSION['redirect']); // Elimina la variable de sesión después de usarla ?>
+<?php endif; ?>

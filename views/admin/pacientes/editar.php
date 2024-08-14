@@ -12,7 +12,7 @@
         </div>
         <div class="row justify-content-center py-20">
             <div class="col-xl">
-                <?php include_once __DIR__ . '/../../templates/alertas.php'; ?>
+                <?php include_once __DIR__ . '/../../template/alerta.php'; ?>
                 <form class="js-validation-material" id="paciente_form" method="POST" enctype="multipart/form-data">
                     <?php include_once __DIR__ . '/formulario.php'; ?>
 
@@ -24,3 +24,12 @@
         </div>
     </div>
 </div>
+
+<?php if (isset($_SESSION['redirect'])): ?>
+<script>
+    setTimeout(function() {
+        window.location.href = "<?php echo $_SESSION['redirect']; ?>";
+    }, 5000); // Redirige después de 5 segundos
+</script>
+<?php unset($_SESSION['redirect']); // Elimina la variable de sesión después de usarla ?>
+<?php endif; ?>

@@ -68,16 +68,22 @@ class DashboardController
                 return htmlspecialchars($item, ENT_QUOTES, 'UTF-8');
             }, $_POST);
 
-            $metros = $_POST['metros'];
-            $centimetros = $_POST['centimetros'];
-            $estatura = floatval($metros + ($centimetros / 100));
-            $_POST['estatura'] = $estatura;
+            // Obtener y validar los datos de metros y centímetros
+            $metros = isset($_POST['metros']) ? $_POST['metros'] : '0';
+            $centimetros = isset($_POST['centimetros']) ? $_POST['centimetros'] : '0';
+
+            if (!is_numeric($metros) || !is_numeric($centimetros)) {
+                $alertas['danger'][] = 'Los valores de metros y centímetros deben ser numéricos.';
+            } else {
+                $metros = floatval($metros);
+                $centimetros = floatval($centimetros);
+                $estatura = $metros + ($centimetros / 100);
+                $_POST['estatura'] = $estatura;
+            }
+
             $_POST['usuario_id'] = $_SESSION['id'];
             $_POST['url_avance'] = md5(uniqid(rand(), true));
-
-             // Fecha de creación
             $_POST['fecha_creacion'] = date('Y-m-d H:i:s');
-
 
             $checkboxes = ['diabetes', 'cancer', 'obesidad', 'infartos', 'alergias', 'depresion', 'artritis', 'estrenimiento', 'gastritis', 'comida_chatarra', 'fumas', 'bebes', 'cirugias', 'embarazos', 'abortos'];
             foreach ($checkboxes as $checkbox) {
@@ -87,6 +93,7 @@ class DashboardController
             $paciente = new Paciente($_POST);
             $paciente->sincronizar($_POST);
 
+            // Manejo de archivo
             if (!empty($_FILES['expediente_file']['tmp_name'])) {
                 $fileTmpPath = '../public/docs/patients/';
                 if (!is_dir($fileTmpPath)) {
@@ -116,14 +123,15 @@ class DashboardController
             if (empty($alertas)) {
                 $resultado = $paciente->guardar();
                 if ($resultado) {
-                    $alertas['success'][] = 'Paciente Creado correctamente!';
-                    //header('Location: admin/pacientes');
+                    $alertas['success'][] = 'Paciente creado correctamente!';
+                    $_SESSION['redirect'] = '/admin/pacientes';
+                    // No hagas la redirección inmediata
                 } else {
-                    $alertas['danger'][] = 'El Paciente no se registro correctamente!';
+                    $alertas['danger'][] = 'El Paciente no se registró correctamente!';
                 }
             } else {
                 $alertas = $paciente->getAlertas();
-            }
+            }            
         }
 
         $router->render('admin/pacientes/crear', [
@@ -133,6 +141,7 @@ class DashboardController
             'generos' => $generos
         ], 'admin-layout');
     }
+
 
     public static function editar(Router $router)
     {
@@ -148,10 +157,23 @@ class DashboardController
                 return htmlspecialchars($item, ENT_QUOTES, 'UTF-8');
             }, $_POST);
 
-            $metros = $_POST['metros'];
-            $centimetros = $_POST['centimetros'];
-            $estatura = floatval($metros + ($centimetros / 100));
-            $_POST['estatura'] = $estatura;
+            // Obtener y validar los datos de metros y centímetros
+            $metros = isset($_POST['metros']) ? $_POST['metros'] : '0';
+            $centimetros = isset($_POST['centimetros']) ? $_POST['centimetros'] : '0';
+
+            if (!is_numeric($metros) || !is_numeric($centimetros)) {
+                $alertas['danger'][] = 'Los valores de metros y centímetros deben ser numéricos.';
+            } else {
+                $metros = floatval($metros);
+                $centimetros = floatval($centimetros);
+                $estatura = $metros + ($centimetros / 100);
+                $_POST['estatura'] = $estatura;
+            }
+
+            // Asignar los valores al paciente
+            $paciente->metros = $metros;
+            $paciente->centimetros = $centimetros;
+            $paciente->estatura = $estatura;
 
             $checkboxes = ['diabetes', 'cancer', 'obesidad', 'infartos', 'alergias', 'depresion', 'artritis', 'estrenimiento', 'gastritis', 'comida_chatarra', 'fumas', 'bebes', 'cirugias', 'embarazos', 'abortos'];
             foreach ($checkboxes as $checkbox) {
@@ -193,14 +215,14 @@ class DashboardController
                 $resultado = $paciente->guardar();
                 if ($resultado) {
                     $alertas['success'][] = 'Paciente editado correctamente!';
-                   
-                   // header('Location: admin/pacientes');
+                    $_SESSION['redirect'] = '/admin/pacientes';
+                    // No hagas la redirección inmediata
                 } else {
                     $alertas['danger'][] = 'Error al editar paciente';
                 }
             } else {
                 $alertas = $paciente->getAlertas();
-            }
+            }            
         }
 
         $router->render('admin/pacientes/editar', [
@@ -210,6 +232,7 @@ class DashboardController
             'generos' => $generos
         ], 'admin-layout');
     }
+
 
     public static function eliminar(Router $router)
     {
