@@ -1,5 +1,8 @@
 <?php
-$current_page = $_SERVER['REQUEST_URI'];
+// No declares la función is_admin aquí si ya está declarada en funciones.php
+
+$current_page = strtok($_SERVER['REQUEST_URI'], '?'); // Obtener la URL actual y eliminar parámetros
+
 ?>
 
 <!-- Sidebar Scroll Container -->
@@ -45,7 +48,7 @@ $current_page = $_SERVER['REQUEST_URI'];
             <!-- Visible only in mini mode -->
             <div class="sidebar-mini-visible-b align-v animated fadeIn">
                 <img class="img-avatar img-avatar32"
-                    src="<?php echo $_ENV['HOST'] . '/img/photosperfil/' . $_SESSION["foto"]; ?>.png"
+                    src="<?php echo htmlspecialchars($_ENV['HOST'] . '/img/photosperfil/' . $_SESSION["foto"] . '.png'); ?>"
                     alt="Foto de Perfil">
             </div>
             <!-- END Visible only in mini mode -->
@@ -54,13 +57,13 @@ $current_page = $_SERVER['REQUEST_URI'];
             <div class="sidebar-mini-hidden-b text-center">
                 <a class="img-link" href="/admin/system/perfil/cambiar-foto">
                     <img class="img-avatar"
-                        src="<?php echo $_ENV['HOST'] . '/img/photosperfil/' . $_SESSION["foto"]; ?>.png"
+                        src="<?php echo htmlspecialchars($_ENV['HOST'] . '/img/photosperfil/' . $_SESSION["foto"] . '.png'); ?>"
                         alt="Foto Perfil">
                 </a>
                 <ul class="list-inline mt-10">
                     <li class="list-inline-item">
                         <a class="link-effect text-dual-primary-dark font-size-xs font-w600 text-uppercase"
-                            href="/admin/perfil"><?php echo $_SESSION["nombre"]; ?></a>
+                            href="/admin/system/perfil"><?php echo htmlspecialchars($_SESSION["nombre"]); ?></a>
                     </li>
                     <li class="list-inline-item">
                         <a class="link-effect text-dual-primary-dark" data-toggle="layout"
@@ -85,96 +88,137 @@ $current_page = $_SERVER['REQUEST_URI'];
         <div class="content-side content-side-full">
             <ul class="nav-main">
                 <li class="<?php echo ($current_page == '/admin/dashboard') ? 'open' : ''; ?>">
-                    <a href="/admin/dashboard" class="<?php echo ($current_page == '/admin/dashboard') ? 'active' : ''; ?>">
+                    <a href="/admin/dashboard"
+                        class="<?php echo ($current_page == '/admin/dashboard') ? 'active' : ''; ?>">
                         <i class="fa fa-dashboard"></i><span class="sidebar-mini-hide">Inicio</span>
                     </a>
                 </li>
 
-                <?php if ($_SESSION["perfil"] == "admin") : ?>
-                <li class="nav-main-heading"><span class="sidebar-mini-visible"></span><span class="sidebar-mini-hidden">Consultas y Citas</span></li>
-                <li class="<?php echo (strpos($current_page, '/admin/cita') !== false || strpos($current_page, '/admin/pacientes') !== false || strpos($current_page, '/admin/historico') !== false) ? 'open' : ''; ?>">
-                    <a class="nav-submenu <?php echo (strpos($current_page, '/admin/cita') !== false || strpos($current_page, '/admin/pacientes') !== false || strpos($current_page, '/admin/historico') !== false) ? 'active' : ''; ?>" data-toggle="nav-submenu" href="#">
+                <?php if (is_admin()) : ?>
+                <li class="nav-main-heading"><span class="sidebar-mini-visible"></span><span
+                        class="sidebar-mini-hidden">Consultas y Citas</span></li>
+                <li
+                    class="<?php echo (strpos($current_page, '/admin/cita') !== false || strpos($current_page, '/admin/expedientes') !== false || strpos($current_page, '/admin/historico') !== false) ? 'open' : ''; ?>">
+                    <a class="nav-submenu <?php echo (strpos($current_page, '/admin/cita') !== false || strpos($current_page, '/admin/expedientes') !== false || strpos($current_page, '/admin/historico') !== false) ? 'active' : ''; ?>"
+                        data-toggle="nav-submenu" href="#">
                         <i class="si si-calendar"></i><span class="sidebar-mini-hide">Consultas y Citas</span>
                     </a>
                     <ul>
                         <li>
-                            <a href="/admin/cita_programada" class="<?php echo ($current_page == '/admin/cita_programada') ? 'active' : ''; ?>">
+                            <a href="/admin/cita_programada"
+                                class="<?php echo ($current_page == '/admin/cita_programada') ? 'active' : ''; ?>">
                                 <span class="sidebar-mini-hide">Citas Programadas</span>
                             </a>
                         </li>
                         <li>
-                            <a href="/admin/pacientes" class="<?php echo ($current_page == '/admin/pacientes') ? 'active' : ''; ?>">
+                            <a href="/admin/expedientes"
+                                class="<?php echo ($current_page == '/admin/expedientes') ? 'active' : ''; ?>">
                                 <span class="sidebar-mini-hide">Pacientes</span>
                             </a>
                         </li>
                         <li>
-                            <a href="/admin/cita" class="<?php echo ($current_page == '/admin/cita') ? 'active' : ''; ?>">
+                            <a href="/admin/cita"
+                                class="<?php echo ($current_page == '/admin/cita') ? 'active' : ''; ?>">
                                 <span class="sidebar-mini-hide">Citas</span>
                             </a>
                         </li>
                         <li>
-                            <a href="/admin/historico" class="<?php echo ($current_page == '/admin/historico') ? 'active' : ''; ?>">
-                                <span class="sidebar-mini-hide">Historico</span>
+                            <a href="/admin/historico"
+                                class="<?php echo ($current_page == '/admin/historico') ? 'active' : ''; ?>">
+                                <span class="sidebar-mini-hide">Histórico</span>
                             </a>
                         </li>
                     </ul>
                 </li>
-                <?php endif ?>
-                
-                <li class="nav-main-heading"><span class="sidebar-mini-visible">C</span><span class="sidebar-mini-hidden">Sistema</span></li>
+
+                <!-- Agregar enlace para Roles -->
+                <li class="nav-main-heading"><span class="sidebar-mini-visible">S</span><span
+                        class="sidebar-mini-hidden">Sistema</span></li>
+
+                <li class="<?php echo (strpos($current_page, '/admin/system/roles') !== false) ? 'open' : ''; ?>">
+                    <a class="nav-submenu <?php echo (strpos($current_page, '/admin/system/roles') !== false) ? 'active' : ''; ?>"
+                        data-toggle="nav-submenu" href="#">
+                        <i class="fa fa-user-tag"></i><span class="sidebar-mini-hide">Roles</span>
+                    </a>
+                    <ul>
+                        <li>
+                            <a href="/admin/system/roles"
+                                class="<?php echo ($current_page == '/admin/system/roles/') ? 'active' : ''; ?>">
+                                <span class="sidebar-mini-hide">Gestión de Roles</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
+                <!-- Agregar enlace para Permisos -->
+                <li class="<?php echo (strpos($current_page, '/admin/system/permisos') !== false) ? 'open' : ''; ?>">
+                    <a class="nav-submenu <?php echo (strpos($current_page, '/admin/system/permisos') !== false) ? 'active' : ''; ?>"
+                        data-toggle="nav-submenu" href="#">
+                        <i class="fa fa-lock"></i><span class="sidebar-mini-hide">Permisos</span>
+                    </a>
+                    <ul>
+                        <li>
+                            <a href="/admin/system/permisos"
+                                class="<?php echo ($current_page == '/admin/system/permisos') ? 'active' : ''; ?>">
+                                <span class="sidebar-mini-hide">Gestión de Permisos</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/admin/system/permisos/crear"
+                                class="<?php echo ($current_page == '/admin/system/permisos/crear') ? 'active' : ''; ?>">
+                                <span class="sidebar-mini-hide">Crear Permiso</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/admin/system/permisos/editar"
+                                class="<?php echo ($current_page == '/admin/system/permisos/editar') ? 'active' : ''; ?>">
+                                <span class="sidebar-mini-hide">Editar Permiso</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
+
+                <li class="nav-main-heading"><span class="sidebar-mini-visible">C</span><span
+                        class="sidebar-mini-hidden">Configuración</span></li>
                 <li class="<?php echo (strpos($current_page, '/admin/system') !== false) ? 'open' : ''; ?>">
-                    <a class="nav-submenu <?php echo (strpos($current_page, '/admin/system') !== false) ? 'active' : ''; ?>" data-toggle="nav-submenu" href="#">
+                    <a class="nav-submenu <?php echo (strpos($current_page, '/admin/system') !== false) ? 'active' : ''; ?>"
+                        data-toggle="nav-submenu" href="#">
                         <i class="fa fa-cogs"></i><span class="sidebar-mini-hide">Sistema</span>
                     </a>
                     <ul>
                         <li>
-                            <a href="/admin/system/perfil" class="<?php echo ($current_page == '/admin/system/perfil') ? 'active' : ''; ?>">
+                            <a href="/admin/system/perfil"
+                                class="<?php echo ($current_page == '/admin/system/perfil') ? 'active' : ''; ?>">
                                 <span class="sidebar-mini-hide">Perfil</span>
                             </a>
                         </li>
                         <li>
-                            <a href="/admin/system/configuracion" class="<?php echo ($current_page == '/admin/system/configuracion') ? 'active' : ''; ?>">
+                            <a href="/admin/system/configuracion"
+                                class="<?php echo ($current_page == '/admin/system/configuracion') ? 'active' : ''; ?>">
                                 <span class="sidebar-mini-hide">Configuración</span>
                             </a>
                         </li>
                         <li>
-                            <a href="/admin/system/usuarios" class="<?php echo ($current_page == '/admin/system/usuarios') ? 'active' : ''; ?>">
-                                <span class="sidebar-mini-hide">Gestión de Usuarios</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/admin/system/roles" class="<?php echo ($current_page == '/admin/system/roles') ? 'active' : ''; ?>">
-                                <span class="sidebar-mini-hide">Gestión de Roles</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/admin/system/logs" class="<?php echo ($current_page == '/admin/system/logs') ? 'active' : ''; ?>">
-                                <span class="sidebar-mini-hide">Logs del Sistema</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/admin/system/backup" class="<?php echo ($current_page == '/admin/system/backup') ? 'active' : ''; ?>">
-                                <span class="sidebar-mini-hide">Respaldo de Datos</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/admin/system/notificaciones" class="<?php echo ($current_page == '/admin/system/notificaciones') ? 'active' : ''; ?>">
-                                <span class="sidebar-mini-hide">Notificaciones</span>
+                            <a href="/admin/system/cambiar-contraseña"
+                                class="<?php echo ($current_page == '/admin/system/cambiar-contraseña') ? 'active' : ''; ?>">
+                                <span class="sidebar-mini-hide">Cambiar Contraseña</span>
                             </a>
                         </li>
                     </ul>
                 </li>
-                <li>
-                    <form method="POST" action="/logout" class="nav-submenu">
-                        <button type="submit" class="btn btn-rounded btn-dual-secondary">
+                <li class="list-inline-item">
+                    <form method="POST" action="/logout" class="d-inline">
+                        <button type="submit" class="btn btn-outline-danger">
                             <i class="si si-logout"></i><span class="sidebar-mini-hide">Cerrar Sesión</span>
                         </button>
                     </form>
                 </li>
+                <?php endif; ?>
             </ul>
         </div>
         <!-- END Side Navigation -->
     </div>
-    <!-- Sidebar Content -->
+    <!-- END Sidebar Content -->
 </div>
 <!-- END Sidebar Scroll Container -->

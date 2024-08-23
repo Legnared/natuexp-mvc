@@ -12,7 +12,10 @@ class SystemController
     public static function perfil(Router $router)
     {
         session_start();
-        isAuth();
+        if (!is_admin()) {
+            header('Location: /admin/dashboard/index');
+            exit();
+        }
         $alertas = [];
         $usuario = Usuario::find($_SESSION['id']);
         
@@ -49,7 +52,10 @@ class SystemController
 
     public static function cambiarPassword(Router $router) {
         session_start();
-        isAuth();
+        if (!is_admin()) {
+            header('Location: /admin/dashboard/index');
+            exit();
+        }
         $alertas = [];
     
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -89,7 +95,10 @@ class SystemController
     public static function cambiarFoto(Router $router)
     {
         session_start();
-        isAuth();
+        if (!is_admin()) {
+            header('Location: /admin/dashboard/index');
+            exit();
+        }
         $alertas = [];
         $usuario = Usuario::find($_SESSION['id']);
         $usuario->foto_actual = $usuario->foto;
@@ -138,7 +147,10 @@ class SystemController
     public static function configuracion(Router $router)
     {
         session_start();
-        isAuth();
+        if (!is_admin()) {
+            header('Location: /admin/dashboard/index');
+            exit();
+        }
         // Aquí iría la lógica para manejar la configuración del sistema
         $router->render('admin/system/configuracion/index', [
             'titulo' => 'Configuración'
@@ -148,27 +160,24 @@ class SystemController
     public static function gestionUsuarios(Router $router)
     {
         session_start();
-        isAuth();
+        if (!is_admin()) {
+            header('Location: /admin/dashboard/index');
+            exit();
+        }
         // Aquí iría la lógica para manejar la gestión de usuarios
         $router->render('admin/system/usuarios/index', [
             'titulo' => 'Gestión de Usuarios'
         ], 'admin-layout');
     }
 
-    public static function gestionRoles(Router $router)
-    {
-        session_start();
-        isAuth();
-        // Aquí iría la lógica para manejar la gestión de roles
-        $router->render('admin/system/roles/index', [
-            'titulo' => 'Gestión de Roles'
-        ], 'admin-layout');
-    }
 
     public static function logs(Router $router)
     {
         session_start();
-        isAuth();
+        if (!is_admin()) {
+            header('Location: /admin/dashboard/index');
+            exit();
+        }
         // Aquí iría la lógica para manejar los logs del sistema
         $router->render('admin/system/logs/index', [
             'titulo' => 'Logs del Sistema'
@@ -178,7 +187,10 @@ class SystemController
     public static function respaldo(Router $router)
     {
         session_start();
-        isAuth();
+        if (!is_admin()) {
+            header('Location: /admin/dashboard/index');
+            exit();
+        }
         // Aquí iría la lógica para manejar el respaldo de datos
         $router->render('admin/system/backup/index', [
             'titulo' => 'Respaldo de Datos'
@@ -188,7 +200,10 @@ class SystemController
     public static function notificaciones(Router $router)
     {
         session_start();
-        isAuth();
+        if (!is_admin()) {
+            header('Location: /admin/dashboard/index');
+            exit();
+        }
         // Aquí iría la lógica para manejar las notificaciones del sistema
         $router->render('admin/system/notificaciones/index', [
             'titulo' => 'Notificaciones'

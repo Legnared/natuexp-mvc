@@ -15,6 +15,7 @@ class Contacto extends ActiveRecord {
     public $creado;
 
     public function __construct($args = []) {
+        
         $this->id = $args['id'] ?? null;
         $this->nombre = $args['nombre'] ?? '';
         $this->email = $args['email'] ?? '';
@@ -27,20 +28,31 @@ class Contacto extends ActiveRecord {
         self::$alertas = []; // Aseguramos que las alertas están vacías
 
         if (!$this->nombre) {
-            self::$alertas['danger'][] = 'El nombre es obligatorio';
+            self::$alertas['error'][] = 'El nombre es obligatorio';
         }
         if (!$this->email) {
-            self::$alertas['danger'][] = 'El email es obligatorio';
+            self::$alertas['error'][] = 'El email es obligatorio';
         }
         if (!$this->asunto) {
-            self::$alertas['danger'][] = 'El asunto es obligatorio';
+            self::$alertas['error'][] = 'El asunto es obligatorio';
         }
         if (!$this->mensaje) {
-            self::$alertas['danger'][] = 'El mensaje es obligatorio';
+            self::$alertas['error'][] = 'El mensaje es obligatorio';
         }
 
         return self::$alertas;
     }
+
+    public function sincronizar($args = []) {
+        foreach ($args as $key => $value) {
+            if (property_exists($this, $key)) {
+                $this->$key = $value;
+            }
+        }
+    }
+    
+    
+    
 
   
 }

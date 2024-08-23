@@ -15,7 +15,11 @@ class DashboardController
     public static function index(Router $router)
     {
         session_start();
-        isAuth();
+        // Verificar si el usuario tiene permisos de administrador
+        if (!is_admin()) {
+            header('Location: /login');
+            exit();
+        }
 
         $usuario_id = $_SESSION['id'];
         $alertas = [];
@@ -27,22 +31,29 @@ class DashboardController
         $pacientes = Paciente::pacientesPorUsuario($usuario_id);
         $totalPacientes = count($pacientes);
 
+        // Obtener el número de citas por semana
+        $citasPorSemana = Cita::citasPorSemana($usuario_id);
+
         $router->render('admin/dashboard/index', [
             'titulo' => 'Panel de Administración',
             'subtitulo' => 'Revisión Médica',
             'pacientes' => $pacientes,
             'totalPacientes' => $totalPacientes,
-            'totalCitas' => $totalCitas // Pasar el conteo de citas
+            'totalCitas' => $totalCitas,
+            'citasPorSemana' => $citasPorSemana
         ], 'admin-layout');
     }
-    
 
-   
 
     public static function expediente(Router $router)
     {
         session_start();
-        isAuth();
+        // Verificar si el usuario tiene permisos de administrador
+        if (!is_admin()) {
+            header('Location: /login');
+            exit();
+        }
+
         $id = $_SESSION['id'];
         $alertas = [];
         
@@ -55,85 +66,63 @@ class DashboardController
         ], 'admin-layout');
     }
 
-    public static function crear(Router $router)
-    {
+    public static function crear(Router $router) {
         session_start();
-        isAuth();
+        // Verificar si el usuario tiene permisos de administrador
+        if (!is_admin()) {
+            header('Location: /login');
+            exit();
+        }
+    
         $alertas = [];
-        $generos = Sexo::all('ASC');
-        
+        $generos = Sexo::all('ASC'); // Obtener todos los géneros disponibles
         $paciente = new Paciente();
+    
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $_POST = array_map(function ($item) {
-                return htmlspecialchars($item, ENT_QUOTES, 'UTF-8');
-            }, $_POST);
-
-            // Obtener y validar los datos de metros y centímetros
-            $metros = isset($_POST['metros']) ? $_POST['metros'] : '0';
-            $centimetros = isset($_POST['centimetros']) ? $_POST['centimetros'] : '0';
-
-            if (!is_numeric($metros) || !is_numeric($centimetros)) {
-                $alertas['danger'][] = 'Los valores de metros y centímetros deben ser numéricos.';
-            } else {
-                $metros = floatval($metros);
-                $centimetros = floatval($centimetros);
-                $estatura = $metros + ($centimetros / 100);
-                $_POST['estatura'] = $estatura;
-            }
-
+            // Sanitizar datos de entrada
+            $_POST = array_map('htmlspecialchars', $_POST);
+    
+            // Asignar valores adicionales
             $_POST['usuario_id'] = $_SESSION['id'];
             $_POST['url_avance'] = md5(uniqid(rand(), true));
             $_POST['fecha_creacion'] = date('Y-m-d H:i:s');
-
-            $checkboxes = ['diabetes', 'cancer', 'obesidad', 'infartos', 'alergias', 'depresion', 'artritis', 'estrenimiento', 'gastritis', 'comida_chatarra', 'fumas', 'bebes', 'cirugias', 'embarazos', 'abortos'];
+            $_POST['estatus'] = 1; // Establecer estatus como activo
+    
+            // Manejo de checkboxes
+            $checkboxes = [
+                'diabetes', 'cancer', 'obesidad', 'infartos', 'alergias', 
+                'depresion', 'artritis', 'estrenimiento', 'gastritis', 
+                'comida_chatarra', 'fumas', 'bebes', 'cirugias', 'embarazos', 'abortos'
+            ];
             foreach ($checkboxes as $checkbox) {
                 $_POST[$checkbox] = isset($_POST[$checkbox]) ? 1 : 0;
             }
-
-            $paciente = new Paciente($_POST);
+    
+            // Manejo de archivos
+            $alertas = self::manejarArchivos($_FILES, $alertas);
+    
+            // Sincronizar datos del paciente
             $paciente->sincronizar($_POST);
-
-            // Manejo de archivo
-            if (!empty($_FILES['expediente_file']['tmp_name'])) {
-                $fileTmpPath = '../public/docs/patients/';
-                if (!is_dir($fileTmpPath)) {
-                    mkdir($fileTmpPath, 0777, true);
-                }
-                $extension = explode('.', $_FILES['expediente_file']['name']);
-                $new_name = md5(uniqid(rand(), true)) . '.' . $extension[1];
-                $destination = '../public/docs/patients/' . $new_name;
-                $extension = pathinfo($new_name, PATHINFO_EXTENSION);
-                $file = $_FILES['expediente_file']['tmp_name'];
-                if (!in_array($extension, ['zip', 'pdf', 'docx', 'doc'])) {
-                    Paciente::setAlerta('error', 'Los archivos deben ser en formato .zip, .pdf, .doc o .docx!');
-                    $alertas = $paciente->getAlertas();
-                } elseif ($_FILES['expediente_file']['size'] > 10000000) {
-                    Paciente::setAlerta('error', 'El archivo excede el tamaño permitido de 10MB.');
-                    $alertas = $paciente->getAlertas();
-                } else {
-                    move_uploaded_file($file, $destination);
-                    $_POST['expediente_file'] = $new_name;
-                    $paciente->expediente_file = $new_name;
-                }
-            } else {
-                $paciente->expediente_file = '';
-            }
-            $alertas = $paciente->validar();
-
+    
+            // Validar datos del paciente
+            $alertas = array_merge($alertas, $paciente->validar());
+    
             if (empty($alertas)) {
-                $resultado = $paciente->guardar();
-                if ($resultado) {
-                    $alertas['success'][] = 'Paciente creado correctamente!';
-                    $_SESSION['redirect'] = '/admin/pacientes';
-                    // No hagas la redirección inmediata
-                } else {
-                    $alertas['danger'][] = 'El Paciente no se registró correctamente!';
+                try {
+                    $resultado = $paciente->guardar();
+                    if ($resultado) {
+                        $_SESSION['redirect'] = '/admin/pacientes'; // Asigna la URL de redirección
+                        $alertas['success'][] = 'Paciente creado correctamente!, espere 5 segundos serás redireccionado al Listado de Pacientes';
+                        // No redirigir aquí; el redireccionamiento se maneja en la vista
+                    } else {
+                        $alertas['error'][] = 'El Paciente no se registró correctamente!';
+                    }
+                } catch (\Exception $e) {
+                    $alertas['error'][] = 'Error al guardar el paciente: ' . $e->getMessage();
                 }
-            } else {
-                $alertas = $paciente->getAlertas();
-            }            
+            }
         }
-
+    
         $router->render('admin/pacientes/crear', [
             'alertas' => $alertas,
             'titulo' => 'Crear Paciente',
@@ -141,88 +130,68 @@ class DashboardController
             'generos' => $generos
         ], 'admin-layout');
     }
-
-
+    
     public static function editar(Router $router)
     {
         session_start();
-        isAuth();
+        // Verificar si el usuario tiene permisos de administrador
+        if (!is_admin()) {
+            header('Location: /login');
+            exit();
+        }
+
         $alertas = [];
         $generos = Sexo::all('ASC');
-        $id = $_GET['id'];
+        $id = $_GET['id'] ?? null;
 
-        $paciente = Paciente::find($id);
+        if (!$id) {
+            header('Location: /admin/pacientes');
+            exit;
+        }
+
+        $paciente = Paciente::findId($id);
+
+        if (!$paciente) {
+            header('Location: /admin/pacientes');
+            exit;
+        }
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $_POST = array_map(function ($item) {
-                return htmlspecialchars($item, ENT_QUOTES, 'UTF-8');
-            }, $_POST);
+            $_POST = array_map('htmlspecialchars', $_POST);
 
-            // Obtener y validar los datos de metros y centímetros
-            $metros = isset($_POST['metros']) ? $_POST['metros'] : '0';
-            $centimetros = isset($_POST['centimetros']) ? $_POST['centimetros'] : '0';
+            // Manejo de estatura
+            $_POST['estatura'] = isset($_POST['estatura']) ? floatval($_POST['estatura']) : 0;
 
-            if (!is_numeric($metros) || !is_numeric($centimetros)) {
-                $alertas['danger'][] = 'Los valores de metros y centímetros deben ser numéricos.';
-            } else {
-                $metros = floatval($metros);
-                $centimetros = floatval($centimetros);
-                $estatura = $metros + ($centimetros / 100);
-                $_POST['estatura'] = $estatura;
-            }
-
-            // Asignar los valores al paciente
-            $paciente->metros = $metros;
-            $paciente->centimetros = $centimetros;
-            $paciente->estatura = $estatura;
-
-            $checkboxes = ['diabetes', 'cancer', 'obesidad', 'infartos', 'alergias', 'depresion', 'artritis', 'estrenimiento', 'gastritis', 'comida_chatarra', 'fumas', 'bebes', 'cirugias', 'embarazos', 'abortos'];
+            // Manejo de checkboxes
+            $checkboxes = [
+                'diabetes', 'cancer', 'obesidad', 'infartos', 'alergias',
+                'depresion', 'artritis', 'estrenimiento', 'gastritis',
+                'comida_chatarra', 'fumas', 'bebes', 'cirugias', 'embarazos', 'abortos'
+            ];
             foreach ($checkboxes as $checkbox) {
                 $_POST[$checkbox] = isset($_POST[$checkbox]) ? 1 : 0;
             }
 
-            // Fecha de modificación
-            $_POST['fecha_modificacion'] = date('Y-m-d H:i:s');
-
+            // Sincronizar datos del paciente
             $paciente->sincronizar($_POST);
 
-            if (!empty($_FILES['expediente_file']['tmp_name'])) {
-                $fileTmpPath = '../public/docs/patients/';
-                if (!is_dir($fileTmpPath)) {
-                    mkdir($fileTmpPath, 0777, true);
-                }
-                $extension = explode('.', $_FILES['expediente_file']['name']);
-                $new_name = md5(uniqid(rand(), true)) . '.' . $extension[1];
-                $destination = '../public/docs/patients/' . $new_name;
-                $extension = pathinfo($new_name, PATHINFO_EXTENSION);
-                $file = $_FILES['expediente_file']['tmp_name'];
-                if (!in_array($extension, ['zip', 'pdf', 'docx', 'doc'])) {
-                    Paciente::setAlerta('error', 'Los archivos deben ser en formato .zip, .pdf, .doc o .docx!');
-                    $alertas = $paciente->getAlertas();
-                } elseif ($_FILES['expediente_file']['size'] > 10000000) {
-                    Paciente::setAlerta('error', 'El archivo excede el tamaño permitido de 10MB.');
-                    $alertas = $paciente->getAlertas();
-                } else {
-                    move_uploaded_file($file, $destination);
-                    $_POST['expediente_file'] = $new_name;
-                    $paciente->expediente_file = $new_name;
-                }
-            } else {
-                $_POST['expediente_file'] = $paciente->expediente_file;
-            }
-            $alertas = $paciente->validar();
+            // Manejo de archivos
+            $alertas = self::manejarArchivos($_FILES, $alertas);
+
+            // Validación de los datos del paciente
+            $alertas = array_merge($alertas, $paciente->validar());
 
             if (empty($alertas)) {
-                $resultado = $paciente->guardar();
-                if ($resultado) {
-                    $alertas['success'][] = 'Paciente editado correctamente!';
-                    $_SESSION['redirect'] = '/admin/pacientes';
-                    // No hagas la redirección inmediata
+                if ($paciente->guardar()) {
+                    $_SESSION['redirect'] = '/admin/pacientes'; // Asigna la URL de redirección
+                    $alertas['success'][] = 'Paciente editado correctamente!, espere 5 segundos serás redireccionado al Listado de Pacientes';
+                    // No redirigir aquí; el redireccionamiento se maneja en la vista
                 } else {
                     $alertas['danger'][] = 'Error al editar paciente';
                 }
             } else {
                 $alertas = $paciente->getAlertas();
-            }            
+            }
         }
 
         $router->render('admin/pacientes/editar', [
@@ -232,44 +201,145 @@ class DashboardController
             'generos' => $generos
         ], 'admin-layout');
     }
+    
+    private static function manejarArchivos($files, $alertas) {
+        $fileTmpPath = '../public/docs/patients/';
+        $imageTmpPath = '../public/img/patients/';
+    
+        if (!is_dir($fileTmpPath)) mkdir($fileTmpPath, 0777, true);
+        if (!is_dir($imageTmpPath)) mkdir($imageTmpPath, 0777, true);
+    
+        if (!empty($files['expediente_file']['tmp_name'][0])) {
+            foreach ($files['expediente_file']['tmp_name'] as $key => $tmp_name) {
+                $fileName = $files['expediente_file']['name'][$key];
+                $fileTmpName = $files['expediente_file']['tmp_name'][$key];
+                $fileSize = $files['expediente_file']['size'][$key];
+                $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+    
+                if (in_array($fileExtension, ['png', 'jpg', 'jpeg', 'webp'])) {
+                    $newFileName = md5(uniqid(rand(), true));
+                    $destination = $imageTmpPath . '/' . $newFileName . '.' . $fileExtension;
+    
+                    $imagen = Image::make($fileTmpName)->fit(800, 800)->encode($fileExtension, 80);
+                    $imagen->save($destination);
+    
+                    $_POST['foto'] = $newFileName . '.' . $fileExtension;
+                } elseif (in_array($fileExtension, ['pdf', 'doc', 'docx'])) {
+                    $newFileName = md5(uniqid(rand(), true)) . '.' . $fileExtension;
+                    $destination = $fileTmpPath . '/' . $newFileName;
+    
+                    if ($fileSize > 10000000) {
+                        Paciente::setAlert('error', 'El archivo es demasiado grande');
+                    } else {
+                        move_uploaded_file($fileTmpName, $destination);
+                        $_POST['expediente'] = $newFileName;
+                    }
+                } else {
+                    $alertas['danger'][] = 'Archivo no permitido';
+                }
+            }
+        }
+    
+        return $alertas;
+    }
 
-
+    
+  
     public static function eliminar(Router $router)
     {
         session_start();
-        isAuth();
-        $id = $_GET['id'];
-
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $paciente = Paciente::find($id);
-             // Fecha de eliminación
-            $paciente->fecha_eliminacion = date('Y-m-d H:i:s');
-            $paciente->eliminar();
-            header('Location: /dashboard/expediente');
+        is_admin();
+        // Verificar si el usuario tiene permisos de administrador
+        if (!is_admin()) {
+        header('Location: /admin/dashboard/index');
+        exit();
+        }// Asegúrate de que el usuario esté autenticado
+        $id = $_GET['id'] ?? null; // Usa null si no existe el parámetro
+    
+        // Verifica si el ID es válido
+        if (!is_numeric($id)) {
+            header('Location: /admin/pacientes');
+            exit;
         }
+    
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Encuentra al paciente por ID
+            $paciente = Paciente::find($id);
+    
+            if ($paciente) {
+                // Establece la fecha de eliminación
+                $paciente->fecha_eliminacion = date('Y-m-d H:i:s');
+                // Llama al método eliminar
+                $paciente->eliminar('estatus'); // Usa 'estatus' o el nombre de la columna que maneja el estado
+                header('Location: /admin/pacientes');
+            } else {
+                // Maneja el caso en que no se encuentra el paciente
+                $alertas['danger'][] = 'Paciente no encontrado.';
+            }
+        }
+    
+        // Renderiza la vista para confirmar eliminación
+        $router->render('admin/pacientes', [
+            'titulo' => 'Eliminar Paciente'
+        ], 'site-layout');
     }
+    
 
     public static function verExpediente(Router $router)
     {
         session_start();
-        isAuth();
-        $id = $_GET['id'];
-        $alertas = [];
-
-        $paciente = Paciente::find($id);
-
+        id_admin();
+    
+        // Verificar si el usuario tiene permisos de administrador
+        if (!is_admin()) {
+            header('Location: /login');
+            exit();
+        }
+    
+        // Obtener el token del parámetro de la URL
+        $token = $_GET['id'] ?? null;
+    
+        // Verificar si el token es válido
+        if (!$token) {
+            header('Location: /dashboard');
+            exit();
+        }
+    
+        // Buscar al paciente usando el token
+        $generos = Sexo::find($id); // Obtener todos los géneros disponibles
+        $paciente = Paciente::findByUrlAvance($token);
+    
+        // Verificar si el paciente existe y pertenece al usuario autenticado
+        if (!$paciente || ($paciente->usuario_id !== $_SESSION['id'] && !is_admin())) {
+            header('Location: /dashboard');
+            exit();
+        }
+    
+        // Preparar los datos para la vista
         $router->render('admin/receta_medica/ver', [
-            'alertas' => $alertas,
             'titulo' => 'Ver Expediente',
-            'paciente' => $paciente
+            'nombre_paciente' => $paciente->nombre . " " . $paciente->apellidos,
+            'edad' => $paciente->edad,
+            'sexo' => $paciente->sexo,
+            'peso' => $paciente->peso,
+            'estatura' => $paciente->estatura,
+            'motivo_consulta' => $paciente->motivo_consulta,
+            'diagnostico' => $paciente->diagnostico,
+            'tratamiento_sujerido' => $paciente->tratamiento_sujerido,
+            'dosis_tratamiento' => $paciente->dosis_tratamiento
         ], 'admin-layout');
     }
-
     
+
 
     public static function cita_programada(Router $router) {
         session_start();
-        isAuth();
+        is_admin();
+        // Verificar si el usuario tiene permisos de administrador
+        if (!is_admin()) {
+        header('Location: /admin/dashboard/index');
+        exit();
+        }
     
         // Obtener todas las citas programadas
         $citas = CitaMedica::todas();

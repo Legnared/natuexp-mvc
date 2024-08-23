@@ -20978,3 +20978,15 @@ div.tagsinput span.tag a:hover {
 .slick-slider.slick-nav-hover:hover .slick-next {
   opacity: 1;
 }
+#loading-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: #007bff; /* Cambia el color según el diseño de tu sitio */
+  margin-bottom: 15px;
+}
+
+#loading-spinner i {
+  margin-right: 5px;
+}

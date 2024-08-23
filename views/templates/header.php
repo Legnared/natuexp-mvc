@@ -31,7 +31,7 @@
                 </a>
                 <div class="dropdown-divider"></div>
                 <form method="POST" action="/logout">
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-outline-danger">
                         <i class="si si-logout"></i><span class="sidebar-mini-hide">Cerrar Sesión</span>
                     </button>
                 </form>

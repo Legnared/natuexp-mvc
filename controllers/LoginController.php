@@ -3,6 +3,7 @@ namespace Controllers;
 
 use MVC\Router;
 use Model\Usuario;
+use Model\Direccion;
 use Classes\Email;
 
 class LoginController
@@ -16,14 +17,14 @@ class LoginController
 
             if (empty($alertas)) {
                 // Verificar que el usuario exista
-                $usuario = Usuario::where('email', $usuario->email);
+                $usuario = Usuario::whereFlexible('email', $usuario->email);
 
                 if (!$usuario || !$usuario->confirmado) {
-                    Usuario::setAlerta('danger', 'El Usuario No Existe o no está confirmado');
+                    Usuario::setAlerta('danger', 'El Usuario no existe o no está confirmado');
                 } else {
-                    // El Usuario existe, verificar contraseña
+                    // Verificar contraseña
                     if (password_verify($_POST['password'], $usuario->password)) {
-                        // Iniciar la sesión
+                        // Iniciar sesión
                         session_start();
                         $_SESSION['id'] = $usuario->id;
                         $_SESSION['nombre'] = $usuario->nombre;
@@ -32,16 +33,14 @@ class LoginController
                         $_SESSION['email'] = $usuario->email;
                         $_SESSION['foto'] = $usuario->foto;
                         $_SESSION['perfil'] = $usuario->perfil ?? null;
+                        $_SESSION['rol_id'] = $usuario->rol_id; // Almacenar el rol
                         $_SESSION['login'] = true;
 
-                        // Debug para verificar la sesión
-                        //debuguear($_SESSION);
-
-                        // Redireccionar
-                        header('Location: /admin/dashboard');
+                        // Redireccionar según el rol
+                        $redirectUrl = $usuario->rol_id == 1 ? '/admin/dashboard' : '/user/dashboard';
+                        header('Location: ' . $redirectUrl);
                         exit();
                     } else {
-                        
                         Usuario::setAlerta('danger', 'Contraseña Incorrecta');
                     }
                 }
@@ -50,7 +49,7 @@ class LoginController
 
         $alertas = Usuario::getAlertas();
 
-        // Render a la vista
+        // Renderizar vista de login
         $router->render('auth/login', [
             'title' => 'Iniciar Sesión',
             'sitio' => 'www.natuexp.com',
@@ -58,69 +57,109 @@ class LoginController
         ], 'layout');
     }
 
-    public static function logout()
-    {
-        session_start(); // Iniciar sesión
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            session_unset(); // Destruir variables de sesión
-            session_destroy(); // Destruir sesión
-            $_SESSION = [];
-            header('Location: /');
-            exit();
-        }
-    }
 
     public static function crear(Router $router) {
         $alertas = [];
         $usuario = new Usuario;
-
+        $direccion = new Direccion; // Instanciar el modelo Dirección
+        
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Sincronizar los datos del usuario
             $usuario->sincronizar($_POST);
-
+        
+            // Validar los datos del usuario
             $alertas = $usuario->validar_cuenta();
-
-            if (empty($alertas)) {
-                $existeUsuario = Usuario::where('email', $usuario->email);
-
-                if ($existeUsuario) {
-                    
-                    Usuario::setAlerta('danger', 'El Usuario ya está registrado');
-                    $alertas = Usuario::getAlertas();
+            if (!empty($alertas)) {
+                // Mostrar la vista con las alertas si hay errores
+                $data = [
+                    'title' => 'Crear Cuenta',
+                    'sitio' => 'www.natuexp.com',
+                    'usuario' => $usuario,
+                    'direccion' => $direccion,
+                    'alertas' => $alertas
+                ];
+                $router->render('auth/crear', $data, 'layout');
+                return;
+            }
+        
+            // Verificar si el usuario ya existe
+            $existeUsuario = Usuario::where('email', $usuario->email);
+            if ($existeUsuario) {
+                Usuario::setAlerta('danger', 'El Usuario ya está registrado');
+                $alertas = Usuario::getAlertas();
+                $data = [
+                    'title' => 'Crear Cuenta',
+                    'sitio' => 'www.natuexp.com',
+                    'direccion' => $direccion,
+                    'usuario' => $usuario,
+                    'alertas' => $alertas
+                ];
+                $router->render('auth/crear', $data, 'layout');
+                return;
+            }
+        
+            // Validar y guardar la dirección si se proporciona
+            if (!empty($_POST['calle'])) {
+                $direccion->sincronizar($_POST);
+                $alertas = $direccion->validar();
+        
+                if (empty($alertas)) {
+                    // Guardar la dirección en la base de datos
+                    $direccion->guardar();
+                    // Asignar el ID de la dirección al usuario
+                    $usuario->direccion_id = $direccion->id;
                 } else {
-                    // Hashear el password
-                    $usuario->hashPassword();
-
-                    // Eliminar password2
-                    unset($usuario->password2);
-
-                    // Generar el Token
-                    $usuario->crearToken();
-
-                    // Crear un nuevo usuario
-                    $usuario->fecha_creacion = date('Y-m-d H:i:s');
-                    $resultado = $usuario->guardar();
-
-                    // Enviar email
-                    $email = new Email($usuario->email, $usuario->nombre, $usuario->token);
-                    $email->enviarConfirmacion();
-
-                    if ($resultado) {
-                        header('Location: /mensaje');
-                        exit();
-                    }
+                    // Mostrar la vista con las alertas si hay errores en la dirección
+                    $data = [
+                        'title' => 'Crear Cuenta',
+                        'sitio' => 'www.natuexp.com',
+                        'usuario' => $usuario,
+                        'direccion' => $direccion,
+                        'alertas' => $alertas
+                    ];
+                    $router->render('auth/crear', $data, 'layout');
+                    return;
                 }
             }
+        
+            // Continuar con la creación del usuario
+            $usuario->hashPassword();
+            unset($usuario->password2);
+            $usuario->crearToken();
+            $usuario->fecha_creacion = date('Y-m-d H:i:s');
+        
+            try {
+                $resultado = $usuario->guardar();
+            
+                if ($resultado) {
+                    $email = new Email($usuario->email, $usuario->nombre, $usuario->token, $usuario->fecha_creacion);
+                    $email->enviarConfirmacion();
+                    header('Location: /mensaje');
+                    exit();
+                } else {
+                    throw new \Exception('Error al guardar el usuario en la base de datos.');
+                }
+            } catch (\Exception $e) {
+                error_log('Error al guardar el usuario: ' . $e->getMessage());
+                // Puedes agregar más detalles aquí si es necesario
+                die('Error crítico al guardar el usuario.');
+            }
+            
         }
-
-        // Render a la vista
-        $router->render('auth/crear', [
+        
+        // Mostrar la vista de creación de cuenta
+        $data = [
             'title' => 'Crear Cuenta',
             'sitio' => 'www.natuexp.com',
             'usuario' => $usuario,
+            'direccion' => $direccion,
             'alertas' => $alertas
-        ], 'layout' );
+        ];
+        $router->render('auth/crear', $data, 'layout');
     }
-
+    
+    
+    
     public static function olvide(Router $router)
     {
         $alertas = [];
@@ -266,5 +305,17 @@ class LoginController
         $router->render('error/500', [
             'title' => 'Error del servidor'
         ], 'layout' );
+    }
+
+    public static function logout()
+    {
+        session_start(); // Iniciar sesión
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            session_unset(); // Destruir variables de sesión
+            session_destroy(); // Destruir sesión
+            $_SESSION = [];
+            header('Location: /');
+            exit();
+        }
     }
 }

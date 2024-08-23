@@ -1,6 +1,12 @@
+
 <h2 class="content-heading d-print-none">
-    <?php echo htmlspecialchars($titulo); ?>
+    <?php echo htmlspecialchars($titulo); ?><br><br>
+    <a href="/admin/pacientes" class="btn btn-alt-primary float-left">
+        Regresar <i class="si si-action-undo ml-5"></i>
+    </a>
 </h2>
+
+
 <div class="block">
     <div class="block-header block-header-default">
         <h3 class="block-title"><?php echo htmlspecialchars($titulo); ?></h3><br>
@@ -38,6 +44,8 @@
                     Género: <?php echo htmlspecialchars($sexo); ?><br>
                     Peso: <?php echo htmlspecialchars($peso); ?> Kgs<br>
                     Estatura: <?php echo htmlspecialchars($estatura); ?> mts.<br>
+                    Glucosa: <?php echo htmlspecialchars($nivel_azucar); ?> .<br>
+                    Presión Arterial: <?php echo htmlspecialchars($presion_arterial); ?>.<br>
                 </address>
             </div>
             <!-- END Patient Info -->
@@ -59,6 +67,8 @@
                         <td>
                             <p class="font-w600 mb-5">Motivo de Consulta:</p>
                             <div class="text-muted"><?php echo htmlspecialchars($motivo_consulta); ?></div>
+                            <p class="font-w600 mb-5">Observaciones:</p>
+                            <div class="text-muted"><?php echo htmlspecialchars($observaciones); ?></div>
                             <p class="font-w600 mb-5">Diagnóstico:</p>
                             <div class="text-muted"><?php echo htmlspecialchars($diagnostico); ?></div>
                         </td>
@@ -70,6 +80,10 @@
                             <div class="text-muted"><?php echo  htmlspecialchars($tratamiento_sujerido); ?></div>
                             <p class="font-w600 mb-5">Dosis del Tratamiento:</p>
                             <div class="text-muted"><?php echo htmlspecialchars($dosis_tratamiento); ?></div>
+                            <p class="font-w600 mb-5">Duración del Tratamiento:</p>
+                            <div class="text-muted"><?php echo htmlspecialchars($tiempo_tratamiento_clinico); ?></div>
+                            <p class="font-w600 mb-5">Duración del Tratamiento Antes de Proxima Revisión:</p>
+                            <div class="text-muted"><?php echo htmlspecialchars($tiempo_tratamiento_sujerido); ?></div>
                         </td>
                     </tr>
                 </tbody>

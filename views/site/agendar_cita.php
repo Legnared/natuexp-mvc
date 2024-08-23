@@ -10,26 +10,51 @@
         <div class="alert-container text-center mx-auto" style="max-width: 400px;">
             <?php include_once __DIR__ . '/../template/alerta.php'; ?>
         </div>
-        
-        <form id="cita_form" method="POST" action="agendar_cita" class="needs-validation mx-auto" novalidate style="max-width: 600px;">
+
+        <form id="cita_form" method="POST" action="agendar_cita" class="needs-validation mx-auto" novalidate
+            style="max-width: 600px;">
             <!-- Datos del Paciente -->
             <fieldset>
                 <legend>Datos del Paciente</legend>
 
+                
+
                 <div class="mb-3">
-                    <label for="nombre" class="form-label">Nombre Completo</label>
-                    <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Nombre Completo" required>
+                    <label for="nombre" class="form-label">Nombre(s)</label>
+                    <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Nombre Completo"
+                        required>
                     <div class="invalid-feedback">
                         El nombre es obligatorio.
                     </div>
                 </div>
 
                 <div class="mb-3">
-                    <label for="fecha_nacimiento" class="form-label">Fecha de Nacimiento</label>
-                    <input type="date" class="form-control" id="fecha_nacimiento" name="fecha_nacimiento" required>
+                    <label for="apellidos" class="form-label">Apellido(s)</label>
+                    <input type="text" class="form-control" id="apellidos" name="apellidos" placeholder="Apellido(s)"
+                        required>
+                    <div class="invalid-feedback">
+                        El Apellido(s) es/son obligatorio(s).
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="fecha_nacimiento" class="form-label"><span class="text-danger">*</span>Fecha de
+                        Nacimiento</label>
+                    <input type="date" class="form-control" id="fecha_nacimiento" name="fecha_nacimiento" required
+                        value="<?php echo $paciente->fecha_nacimiento ?? ''; ?>" onblur="calcularEdad(); mostrarNota()">
                     <div class="invalid-feedback">
                         La fecha de nacimiento es obligatoria.
                     </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="edad" class="form-label">Edad</label>
+                    <input type="text" class="form-control" id="edad" name="edad" readonly
+                        value="<?php echo $paciente->edad ?? ''; ?>">
+                </div>
+
+                <div id="notaEdad" class="alert alert-info" style="display:none; margin-top: 10px;">
+                    La edad ha sido calculada.
                 </div>
 
                 <div class="mb-3">
@@ -46,13 +71,14 @@
 
                 <div class="mb-3">
                     <label for="telefono" class="form-label">Teléfono de Contacto</label>
-                    <input type="tel" class="form-control" id="telefono" name="telefono" placeholder="Teléfono" required>
+                    <input type="tel" class="form-control" id="telefono" name="telefono" placeholder="Teléfono"
+                        required>
                     <div class="invalid-feedback">
                         El teléfono es obligatorio.
                     </div>
                 </div>
 
-                
+
                 <div class="mb-3">
                     <label for="email" class="form-label">Email</label>
                     <input type="email" class="form-control" id="email" name="email" placeholder="Email" required>
@@ -63,7 +89,8 @@
 
                 <div class="mb-3">
                     <label for="direccion" class="form-label">Dirección</label>
-                    <input type="text" class="form-control" id="direccion" name="direccion" placeholder="Dirección" required>
+                    <input type="text" class="form-control" id="direccion" name="direccion" placeholder="Dirección"
+                        required>
                 </div>
             </fieldset>
 
@@ -81,7 +108,8 @@
 
                 <div class="mb-3">
                     <label for="motivo" class="form-label">Motivo de la Cita</label>
-                    <textarea class="form-control" id="motivo" name="motivo" rows="4" placeholder="Motivo de la Cita" required></textarea>
+                    <textarea class="form-control" id="motivo" name="motivo" rows="4" placeholder="Motivo de la Cita"
+                        required></textarea>
                     <div class="invalid-feedback">
                         El motivo de la cita es obligatorio.
                     </div>
@@ -110,6 +138,7 @@
                     Debe aceptar los términos y condiciones.
                 </div>
             </div>
+
 
             <div class="text-center">
                 <button type="submit" class="btn btn-primary">Agendar Cita</button>
@@ -145,7 +174,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
         }
-        
+
         // Validación de campos del formulario
         if (!form.checkValidity()) {
             event.preventDefault();
@@ -159,12 +188,45 @@ document.addEventListener('DOMContentLoaded', function() {
         form.classList.add('was-validated');
     }, false);
 });
+
+function calcularEdad() {
+        const fechaNacimiento = document.getElementById('fecha_nacimiento').value;
+        const edadField = document.getElementById('edad');
+        const notaEdad = document.getElementById('notaEdad');
+
+        if (fechaNacimiento === '') {
+            edadField.value = '';  // Limpiar el campo de edad
+            return;
+        }
+
+        const fecha = new Date(fechaNacimiento);
+        const hoy = new Date();
+        let edad = hoy.getFullYear() - fecha.getFullYear();
+        const m = hoy.getMonth() - fecha.getMonth();
+        if (m < 0 || (m === 0 && hoy.getDate() < fecha.getDate())) {
+            edad--;
+        }
+        edadField.value = edad;
+
+        // Mostrar mensaje de éxito
+        mostrarNota();
+    }
+
+    function mostrarNota() {
+        const notaEdad = document.getElementById('notaEdad');
+        notaEdad.style.display = 'block';
+        setTimeout(() => {
+            notaEdad.style.display = 'none';
+        }, 3000);
+    }
 </script>
 
 <style>
 /* Estilo para centrar las alertas y hacer el contenedor más pequeño */
 .alert-container {
-    max-width: 400px; /* Ancho máximo para el contenedor de alertas */
-    margin: 0 auto 20px; /* Centrar el contenedor y añadir margen inferior */
+    max-width: 400px;
+    /* Ancho máximo para el contenedor de alertas */
+    margin: 0 auto 20px;
+    /* Centrar el contenedor y añadir margen inferior */
 }
 </style>

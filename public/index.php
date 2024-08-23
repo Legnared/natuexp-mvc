@@ -7,8 +7,11 @@ use Controllers\ConsultaAlternativaController;
 use Controllers\DashboardController;
 use Controllers\SitioController;
 use Controllers\CitaController;
-use Controllers\SystemController;  // Añadir el controlador de sistema
+use Controllers\SystemController;
+use Controllers\RolesController;
+use Controllers\PermisosController;
 use Controllers\RecetaMedicaController;
+use Controllers\ExpedienteController;
 
 use MVC\Router;
 
@@ -62,6 +65,16 @@ $router->get('/admin/pacientes/editar', [DashboardController::class, 'editar']);
 $router->post('/admin/pacientes/editar', [DashboardController::class, 'editar']);
 $router->post('/admin/pacientes/eliminar', [DashboardController::class, 'eliminar']);
 
+$router->get('/admin/dashboard', [ExpedienteController::class, 'index']);
+$router->post('/admin/dashboard/logout', [ExpedienteController::class, 'logout']);
+
+$router->get('/admin/expedientes', [ExpedienteController::class, 'expediente']);
+$router->get('/admin/expedientes/crear', [ExpedienteController::class, 'crear']);
+$router->post('/admin/expedientes/crear', [ExpedienteController::class, 'crear']);
+$router->get('/admin/expedientes/editar', [ExpedienteController::class, 'editar']);
+$router->post('/admin/expedientes/editar', [ExpedienteController::class, 'editar']);
+$router->post('/admin/expedientes/eliminar', [ExpedienteController::class, 'eliminar']);
+
 // En tu archivo de rutas, por ejemplo, routes.php
 $router->get('/admin/receta', [RecetaMedicaController::class, 'index']);
 
@@ -87,7 +100,27 @@ $router->get('/admin/system/perfil', [SystemController::class, 'perfil']);
 $router->post('/admin/system/perfil', [SystemController::class, 'perfil']);
 $router->get('/admin/system/configuracion', [SystemController::class, 'configuracion']);
 $router->get('/admin/system/usuarios', [SystemController::class, 'gestionUsuarios']);
-$router->get('/admin/system/roles', [SystemController::class, 'gestionRoles']);
+
+
+// Configuración de Roles
+$router->get('/admin/system/roles', [RolesController::class, 'index']);
+$router->get('/admin/system/roles/crear', [RolesController::class, 'crear']);
+$router->post('/admin/system/roles/crear', [RolesController::class, 'crear']);
+$router->get('/admin/system/roles/editar', [RolesController::class, 'editar']);
+$router->post('/admin/system/roles/editar', [RolesController::class, 'editar']);
+$router->get('/admin/system/roles/eliminar', [RolesController::class, 'eliminar']);
+
+//Configuracion de Permisos
+// Rutas para los permisos del sistema
+$router->get('/admin/system/permisos', [PermisosController::class, 'index']);
+$router->get('/admin/system/permisos/crear', [PermisosController::class, 'crear']);
+$router->post('/admin/system/permisos/crear', [PermisosController::class, 'crear']);
+$router->get('/admin/system/permisos/editar', [PermisosController::class, 'editar']);
+$router->post('/admin/system/permisos/editar', [PermisosController::class, 'editar']);
+$router->post('/admin/system/permisos/eliminar', [PermisosController::class, 'eliminar']);
+
+
+
 $router->get('/admin/system/logs', [SystemController::class, 'logs']);
 $router->get('/admin/system/backup', [SystemController::class, 'respaldo']);
 $router->get('/admin/system/notificaciones', [SystemController::class, 'notificaciones']);

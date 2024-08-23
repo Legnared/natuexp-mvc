@@ -5,7 +5,7 @@ namespace Model;
 class Usuario extends ActiveRecord {
     
     protected static $tabla = 'usuarios';
-    protected static $columnasDB = ['id', 'nombre', 'apellido', 'email',  'telefono', 'foto', 'password', 'confirmado', 'token', 'perfil', 'fecha_creacion', 'fecha_modificacion' ,'estado'];
+    protected static $columnasDB = ['id', 'nombre', 'apellido', 'email', 'telefono', 'foto', 'password', 'confirmado', 'token', 'perfil', 'fecha_creacion', 'fecha_modificacion', 'estado', 'direccion_id', 'rol_id'];
 
     public $id;
     public $nombre;
@@ -23,6 +23,8 @@ class Usuario extends ActiveRecord {
     public $foto;
     public $estado;
     public $fecha_modificacion;
+    public $direccion_id;
+    public $rol_id;
     
     public function __construct($args = []) {
         $this->id = $args['id'] ?? null;
@@ -35,12 +37,14 @@ class Usuario extends ActiveRecord {
         $this->password_actual = $args['password_actual'] ?? '';
         $this->password_nuevo = $args['password_nuevo'] ?? '';
         $this->confirmado = $args['confirmado'] ?? 0;
-        $this->fecha_creacion = $args['fecha_creacion'] ?? 'NOW()';
+        $this->fecha_creacion = $args['fecha_creacion'] ?? date('Y-m-d H:i:s');
         $this->token = $args['token'] ?? '';
         $this->perfil = $args['perfil'] ?? 'usuario';
         $this->foto = $args['foto'] ?? '';
         $this->estado = $args['estado'] ?? 1;
-        $this->fecha_modificacion = $args['fecha_modificacion'] ?? 'NOW()';
+        $this->fecha_modificacion = $args['fecha_modificacion'] ?? date('Y-m-d H:i:s');
+        $this->direccion_id = $args['direccion_id'] ?? null;
+        $this->rol_id = $args['rol_id'] ?? null; // Inicializa el campo rol_id
     }
     
     // Método para sanitizar datos
@@ -57,12 +61,10 @@ class Usuario extends ActiveRecord {
             self::$alertas['danger'][] = 'Email no válido';
         }
         if(!$this->password) {
-            self::$alertas['danger'][] = 'El Password no puede ir vacio';
+            self::$alertas['danger'][] = 'El Password no puede ir vacío';
         }
         return self::$alertas;
     }
-    
-
 
     // Validación para cuentas nuevas
     public function validar_cuenta() {
@@ -76,21 +78,21 @@ class Usuario extends ActiveRecord {
             self::$alertas['danger'][] = 'El Email es Obligatorio';
         }
         if(!$this->telefono) {
-            self::$alertas['danger'][] = 'El Telefóno es Obligatorio';
+            self::$alertas['danger'][] = 'El Teléfono es Obligatorio';
         }
         if(!$this->password) {
-            self::$alertas['danger'][] = 'El Password no puede ir vacio';
+            self::$alertas['danger'][] = 'El Password no puede ir vacío';
         }
         if(strlen($this->password) < 6) {
             self::$alertas['danger'][] = 'El password debe contener al menos 6 caracteres';
         }
         if($this->password !== $this->password2) {
-            self::$alertas['danger'][] = 'Los password son diferentes';
+            self::$alertas['danger'][] = 'Los passwords son diferentes';
         }
         return self::$alertas;
     }
 
-    // Valida un email
+    // Validar Email
     public function validarEmail() {
         if(!$this->email) {
             self::$alertas['danger'][] = 'El Email es Obligatorio';
@@ -101,11 +103,10 @@ class Usuario extends ActiveRecord {
         return self::$alertas;
     }
 
-    
-    // Valida el Password 
+    // Validar Password 
     public function validarPassword() {
         if(!$this->password) {
-            self::$alertas['danger'][] = 'El Password no puede ir vacio';
+            self::$alertas['danger'][] = 'El Password no puede ir vacío';
         }
         if(strlen($this->password) < 6) {
             self::$alertas['danger'][] = 'El password debe contener al menos 6 caracteres';
@@ -113,12 +114,13 @@ class Usuario extends ActiveRecord {
         return self::$alertas;
     }
 
+    // Validar nuevo password
     public function nuevo_password() : array {
         if(!$this->password_actual) {
-            self::$alertas['danger'][] = 'El Password Actual no puede ir vacio';
+            self::$alertas['danger'][] = 'El Password Actual no puede ir vacío';
         }
         if(!$this->password_nuevo) {
-            self::$alertas['danger'][] = 'El Password Nuevo no puede ir vacio';
+            self::$alertas['danger'][] = 'El Password Nuevo no puede ir vacío';
         }
         if(strlen($this->password_nuevo) < 6) {
             self::$alertas['danger'][] = 'El Password debe contener al menos 6 caracteres';
@@ -128,15 +130,15 @@ class Usuario extends ActiveRecord {
 
     // Comprobar el password
     public function comprobar_password() : bool {
-        return password_verify($this->password_actual, $this->password );
+        return password_verify($this->password_actual, $this->password);
     }
 
-    // Hashea el password
+    // Hashear el password
     public function hashPassword() : void {
         $this->password = password_hash($this->password, PASSWORD_BCRYPT);
     }
 
-    //validamos el perfil
+    // Validar perfil
     public function validar_perfil() {
         if (!$this->nombre) {
             self::$alertas['danger'][] = 'El nombre es Obligatorio';
@@ -151,4 +153,12 @@ class Usuario extends ActiveRecord {
     public function crearToken() : void {
         $this->token = uniqid();
     }
+    
+    // Método para obtener la dirección asociada al usuario
+    public function obtenerDireccion() {
+        return Direccion::find($this->direccion_id);
+    }
+
+    
+    
 }

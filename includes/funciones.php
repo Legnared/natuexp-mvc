@@ -12,6 +12,7 @@ function debuguear($variable) : string {
     echo "</pre>";
     exit;
 }
+
 function s($html) : string {
     $s = htmlspecialchars($html);
     return $s;
@@ -41,11 +42,19 @@ function isAuth() : void {
     }
 }
 
+// function is_admin() : bool {
+//     if (!isset($_SESSION)) {
+//         session_start();
+//     }
+//     return isset($_SESSION['perfil']) && !empty($_SESSION['perfil']);
+// }
+
 function is_admin() : bool {
     if (!isset($_SESSION)) {
         session_start();
     }
-    return isset($_SESSION['perfil']) && !empty($_SESSION['perfil']);
+    // Comprobar si la sesión tiene el perfil de administrador
+    return isset($_SESSION['rol_id']) && $_SESSION['rol_id'] === 1;
 }
 
 function aos_animation() : void{

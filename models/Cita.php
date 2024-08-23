@@ -1,8 +1,9 @@
 <?php
+
 namespace Model;
 
 class Cita extends ActiveRecord {
-    
+
     protected static $tabla = 'citas';
     protected static $columnasDB = ['id', 'paciente_id', 'fecha', 'hora', 'nombre_paciente', 'apellidos_paciente', 'descripcion'];
 
@@ -40,8 +41,6 @@ class Cita extends ActiveRecord {
         return $alertas;
     }
 
-    
-
     // Obtener todas las citas con datos del paciente usando JOIN, filtradas por usuario_id
     public static function todos($usuario_id) {
         $query = "SELECT c.*, p.nombre AS nombre_paciente, p.apellidos AS apellidos_paciente 
@@ -72,6 +71,58 @@ class Cita extends ActiveRecord {
         $query = "SELECT * FROM pacientes WHERE usuario_id = " . self::$db->escape_string($usuario_id);
         return self::consultarSQL($query);
     }
+
+    public static function citasPorSemana($usuario_id)
+    {
+        // Ejemplo de consulta para obtener citas por semana
+        $query = "SELECT WEEK(fecha) AS semana, COUNT(*) AS total
+                  FROM citas
+                  WHERE paciente_id = ?
+                  GROUP BY WEEK(fecha)
+                  ORDER BY WEEK(fecha) DESC";
+        $db = self::getDB();
+        $stmt = $db->prepare($query);
+
+        if (!$stmt) {
+            // Mostrar el error de preparación de la consulta
+            error_log("Error al preparar la consulta SQL: " . $db->error);
+            return [];
+        }
+
+        $stmt->bind_param('i', $usuario_id);
+        $stmt->execute();
+
+        $result = $stmt->get_result();
+        if ($result === false) {
+            error_log("Error al ejecutar la consulta SQL: " . $stmt->error);
+            return [];
+        }
+
+        return $result->fetch_all(MYSQLI_ASSOC);
+    }
+
+    // Corregir el método countByColumn
+    public static function countByColumn($table, $column, $value) {
+        $query = "SELECT COUNT(*) as total FROM " . self::$db->escape_string($table) . " WHERE " . self::$db->escape_string($column) . " = ?";
+        $stmt = self::$db->prepare($query);
+
+        if (!$stmt) {
+            // Mostrar el error de preparación de la consulta
+            error_log("Error al preparar la consulta SQL: " . self::$db->error);
+            return 0;
+        }
+
+        $stmt->bind_param('s', $value);
+        if ($stmt->execute()) {
+            $result = $stmt->get_result();
+            return $result->fetch_assoc()['total'];
+        } else {
+            // Mostrar el error de ejecución de la consulta
+            error_log("Error al ejecutar la consulta SQL: " . $stmt->error);
+            return 0;
+        }
+    }
 }
+
 
 ?>

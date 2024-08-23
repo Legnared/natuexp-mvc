@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 31-07-2024 a las 23:21:23
+-- Tiempo de generación: 15-08-2024 a las 00:15:21
 -- Versión del servidor: 10.4.22-MariaDB
 -- Versión de PHP: 8.1.2
 
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Base de datos: `telattec_natuexp_com`
+-- Base de datos: `natuexp_mvc_telatte_db`
 --
 
 -- --------------------------------------------------------
@@ -83,7 +83,9 @@ CREATE TABLE `citas` (
 --
 
 INSERT INTO `citas` (`id`, `paciente_id`, `fecha`, `hora`, `nombre_paciente`, `apellidos_paciente`, `descripcion`) VALUES
-(1, 1, '2024-07-22', '10:00:00', 'Ángel Guillermo', 'Hernández Zambrano', 'Revisión');
+(1, 1, '2024-07-22', '10:00:00', 'Ángel Guillermo', 'Hernández Zambrano', 'Revisión'),
+(2, 1, '2024-08-05', '13:00:00', 'Ángel Guillermo', 'Hernández Zambrano', 'test'),
+(3, 1, '2024-08-14', '10:00:00', 'Ángel Guillermo', 'Hernández Zambrano', 'TEST');
 
 -- --------------------------------------------------------
 
@@ -113,7 +115,10 @@ CREATE TABLE `citas_medica` (
 --
 
 INSERT INTO `citas_medica` (`id`, `nombre`, `fecha_nacimiento`, `sexo`, `telefono`, `email`, `direccion`, `fecha_hora`, `motivo`, `tipo_consulta`, `numero_seguro`, `aceptar_terminos`, `fecha_creacion`, `fecha_modificacion`) VALUES
-(1, 'Ángel Guillermo Hernandez Zambrano', '1993-01-29', 'Masculino', '4432183103', 'angelguillermohernandezz@gmail.com', 'Acuitzeramo 12 Morelia Michoacán 58337', '2024-07-30 12:00:00', 'test', 'General', '1515151515151', 0, '2024-07-30 16:18:36', '2024-07-30 16:18:36');
+(1, 'Ángel Guillermo Hernandez Zambrano', '1993-01-29', 'Masculino', '4432183103', 'angelguillermohernandezz@gmail.com', 'Acuitzeramo 12 Morelia Michoacán 58337', '2024-07-30 12:00:00', 'test', 'General', '1515151515151', 0, '2024-07-30 16:18:36', '2024-07-30 16:18:36'),
+(2, 'Ángel Guillermo', '1993-01-29', 'Masculino', '4432183103', 'angelguillermohernandezz@gmail.com', 'Acuitzeramo 12 Morelia Michoacán 58337', '2024-08-15 10:00:00', 'TEST', 'General', NULL, 0, '2024-08-14 19:48:37', '2024-08-14 19:48:37'),
+(3, 'Ángel Guillermo', '1993-01-29', 'Masculino', '4432183103', 'angelguillermohernandezz@gmail.com', 'Acuitzeramo 12 Morelia Michoacán 58337', '2024-08-15 10:00:00', 'TEST', 'General', NULL, 0, '2024-08-14 19:49:30', '2024-08-14 19:49:30'),
+(4, 'Ángel Guillermo Hernandez Zambrano', '1993-01-29', 'Masculino', '(443) 218-3103', 'angelguillermohernandezz@gmail.com', 'Acuitzeramo 12 Morelia Michoacán 58337', '2024-08-15 14:00:00', 'TEST', 'General', NULL, 0, '2024-08-14 20:00:22', '2024-08-14 20:00:22');
 
 -- --------------------------------------------------------
 
@@ -362,6 +367,8 @@ CREATE TABLE `pacientes` (
   `nombre` varchar(250) COLLATE utf8mb4_unicode_ci NOT NULL,
   `apellidos` varchar(90) COLLATE utf8mb4_unicode_ci NOT NULL,
   `edad` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `telefono` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `correo` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL,
   `motivo_consulta` text COLLATE utf8mb4_unicode_ci NOT NULL,
   `tratamiento_sujerido` text COLLATE utf8mb4_unicode_ci NOT NULL,
   `tiempo_tratamiento_clinico` varchar(250) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -404,18 +411,19 @@ CREATE TABLE `pacientes` (
   `bebes` tinyint(1) DEFAULT 0,
   `cirugias` tinyint(1) DEFAULT 0,
   `embarazos` tinyint(1) DEFAULT 0,
-  `abortos` tinyint(1) DEFAULT 0
+  `abortos` tinyint(1) DEFAULT 0,
+  `num_cirugias` int(11) DEFAULT NULL,
+  `desc_cirugias` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `num_embarazos` int(11) DEFAULT NULL,
+  `num_abortos` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Volcado de datos para la tabla `pacientes`
 --
 
-INSERT INTO `pacientes` (`id`, `nombre`, `apellidos`, `edad`, `motivo_consulta`, `tratamiento_sujerido`, `tiempo_tratamiento_clinico`, `diagnostico`, `observaciones`, `tiempo_tratamiento_sujerido`, `dosis_tratamiento`, `expediente_file`, `sexo_id`, `usuario_id`, `url_avance`, `estatus`, `fecha_creacion`, `fecha_modificacion`, `fecha_eliminacion`, `n_calle_avenida`, `n_exterior`, `n_interior`, `colonia_barrio`, `municipio_delegacion`, `estado_provincia`, `cp`, `fecha_nacimiento`, `presion_arterial`, `nivel_azucar`, `peso`, `estatura`, `temperatura`, `diabetes`, `cancer`, `obesidad`, `infartos`, `alergias`, `depresion`, `artritis`, `estrenimiento`, `gastritis`, `comida_chatarra`, `fumas`, `bebes`, `cirugias`, `embarazos`, `abortos`) VALUES
-(1, 'Ángel Guillermo', 'Hernández Zambrano', '31', 'REVISION', 'NA', '1 año', 'Tiene Colón Irritado', 'Se dara tratamiento', '1 año', '30 gotas por la mañana y por la noche, 2 capsulas de Papaína - 20 minutos antes de cada comida.', '163bcef3fb4d13e907d4fc57e920f15f.pdf', 1, 2, '8c1c205c158c2efbd44176381e3f25d5', 1, '2024-07-11 03:53:56', '2024-07-19 04:32:36', '0000-00-00 00:00:00', 'Zamora', '549', '549', 'Molino de Parras', 'Michoacán', 'Morelia', '58010', '1993-01-29', '120/80', '6.20', '94.00', '1.79', '36.50', 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0),
-(2, 'Ángel Guillermo', 'Hernández Zambrano', '31', 'NA', 'NA', '1 año', '', '', '1 año', '30 gotas por la mañana y por la noche, 2 capsulas de Papaína - 20 minutos antes de cada comida.', '0f00b4374cb3f4dd57105d3ef8ac6c65.pdf', 1, 1, '', 1, '2024-07-11 04:00:19', '2024-07-11 04:00:19', '0000-00-00 00:00:00', 'Zamora', '549', '549', 'Molino de Parras', 'Michoacán', 'Morelia', '58010', '1993-01-29', '120/80', '6.20', '94.00', '1.78', '36.50', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-(3, 'Ángel Guillermo', 'Hernández Zambrano', '31', 'NA', 'NA', '1 año', '', '', '1 año', ' Los elixires se deben consumir 30 Gotas por la mañana en ayunas y despues de la cena igual 30 gotas. Las cápsulas de Papaína debe consumirse 20 min antes en los 3 horarios (Desayuno, Comida y Cena).', 'a6ce4111239d987815a243fd525a262d.pdf', 1, 1, '370b0e47404d9422919d105243710c32', 1, '2024-07-12 03:33:24', '2024-07-12 03:33:24', '0000-00-00 00:00:00', 'Zamora', '549', '549', 'Molino de Parras', 'Michoacán', 'Morelia', '58010', '1993-01-29', '110/85', '0.00', '90.00', '1.79', '36.50', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-(4, 'Ángel Guillermo', 'Hernández Zambrano', '31', 'NA', 'NA', '1 año', '', '', '1 año', ' Los elixires se deben consumir 30 Gotas por la mañana en ayunas y despues de la cena igual 30 gotas. Las cápsulas de Papaína debe consumirse 20 min antes en los 3 horarios (Desayuno, Comida y Cena).', '7c6904cc2021879bb8ff58b08ef2aea8.pdf', 1, 1, '52dbee1c451b79eb5c17df39e8b690e7', 1, '2024-07-12 03:34:23', '2024-07-12 03:35:56', '0000-00-00 00:00:00', 'Zamora', '549', '549', 'Molino de Parras', 'Michoacán', 'Morelia', '58010', '1993-01-29', '110/85', '6.50', '90.00', '1.79', '36.50', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+INSERT INTO `pacientes` (`id`, `nombre`, `apellidos`, `edad`, `telefono`, `correo`, `motivo_consulta`, `tratamiento_sujerido`, `tiempo_tratamiento_clinico`, `diagnostico`, `observaciones`, `tiempo_tratamiento_sujerido`, `dosis_tratamiento`, `expediente_file`, `sexo_id`, `usuario_id`, `url_avance`, `estatus`, `fecha_creacion`, `fecha_modificacion`, `fecha_eliminacion`, `n_calle_avenida`, `n_exterior`, `n_interior`, `colonia_barrio`, `municipio_delegacion`, `estado_provincia`, `cp`, `fecha_nacimiento`, `presion_arterial`, `nivel_azucar`, `peso`, `estatura`, `temperatura`, `diabetes`, `cancer`, `obesidad`, `infartos`, `alergias`, `depresion`, `artritis`, `estrenimiento`, `gastritis`, `comida_chatarra`, `fumas`, `bebes`, `cirugias`, `embarazos`, `abortos`, `num_cirugias`, `desc_cirugias`, `num_embarazos`, `num_abortos`) VALUES
+(1, 'Ángel Guillermo', 'Hernández Zambrano', '31', '4432183103', 'angelguillermohernandezz@gmail', 'TEST', 'TEST', '1 año', 'TEST', 'TEST', '1 año', '30 gotas por la mañana y por la noche, 2 capsulas de Papaína - 20 minutos antes de cada comida.', 'f9c09c27ca6c1feb3a0a621f186219b3.pdf', 1, 2, 'af32dfa9fb155618bf5510909a7a733e', 1, '2024-08-14 04:21:30', '2024-08-14 06:54:06', '0000-00-00 00:00:00', 'Zamora', '549', '549', 'Molino de Parras', 'Michoacán', 'Morelia', '58337', '1993-01-29', '110/85', '6.50', '91.00', '1.79', '36.50', 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 'ESPALDA', 0, 0);
 
 -- --------------------------------------------------------
 
@@ -581,7 +589,7 @@ CREATE TABLE `usuarios` (
 
 INSERT INTO `usuarios` (`id`, `nombre`, `apellido`, `email`, `telefono`, `foto`, `password`, `confirmado`, `token`, `perfil`, `fecha_creacion`, `fecha_modificacion`, `fecha_eliminacion`, `estado`, `direccion_id`) VALUES
 (1, 'Angel Guillermo', 'Hernandez Zambrano', 'angelguillermohernandezz@gmail.com', '4432183103', '8e62d3a9e61c95270a699073e826652d', '$2y$10$pp8MUCgau7XQ7q8gqc6DluBSqWOuyn00hX71udyHwO/pEiUmq9VD2', 1, '', 'admin', '2023-03-09 22:38:56', '2023-03-27 08:41:13', NULL, 1, 0),
-(2, ' Eduardo', 'Sandoval', 'llamahoy@gmail.com', '4433688682', 'c012e54ed4c64dabaecac5bc203ef3fc', '$2y$10$zy/uSzROy8ww7UGppBgG/euj7/HBKQWAD3.xWUM0I3GdH392S8cna', 1, '', 'admin', '2023-03-09 22:38:56', '2024-07-18 14:41:18', NULL, 1, 0),
+(2, ' Eduardo', 'Sandoval Garcia', 'llamahoy@gmail.com', '4433688682', 'c012e54ed4c64dabaecac5bc203ef3fc', '$2y$10$2iS4.bn44nhAn7fERX5ZK.pSm8tYYm2bZU7kn1RCkn9fRoyahzCM.', 1, '', 'admin', '2023-03-09 22:38:56', '2024-08-06 13:28:34', NULL, 1, 0),
 (3, 'Vanessa', 'Farfan', 'vanessafarfan@gmail.com', '4431250145', '', '$2y$10$WdYsMUSz4fDUQck7IyQM7uWO6j1GCmXh8S2a5Two8j3ynYFFdDBcW', 1, '', 'admin', '2024-08-01 03:32:06', '0000-00-00 00:00:00', NULL, 1, 0);
 
 --
@@ -739,13 +747,13 @@ ALTER TABLE `categorys`
 -- AUTO_INCREMENT de la tabla `citas`
 --
 ALTER TABLE `citas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `citas_medica`
 --
 ALTER TABLE `citas_medica`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `contacto`
@@ -799,7 +807,7 @@ ALTER TABLE `pacient`
 -- AUTO_INCREMENT de la tabla `pacientes`
 --
 ALTER TABLE `pacientes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `paquetes`

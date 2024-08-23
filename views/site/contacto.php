@@ -52,27 +52,4 @@
     </div>
 </section>
 
-<script>
-// JavaScript para deshabilitar el envío del formulario si hay campos no válidos
-document.addEventListener('DOMContentLoaded', function() {
-    var form = document.getElementById('contacto_form');
-    form.addEventListener('submit', function(event) {
-        if (!form.checkValidity()) {
-            event.preventDefault();
-            event.stopPropagation();
-        } else {
-            // Resetear el formulario después de una presentación exitosa
-            form.reset(); // Resetea el formulario inmediatamente
-        }
-        form.classList.add('was-validated');
-    }, false);
-});
-</script>
 
-<style>
-/* Estilo para centrar las alertas y hacer el contenedor más pequeño */
-.alert-container {
-    max-width: 400px; /* Ancho máximo para el contenedor de alertas */
-    margin: 0 auto 20px; /* Centrar el contenedor y añadir margen inferior */
-}
-</style>

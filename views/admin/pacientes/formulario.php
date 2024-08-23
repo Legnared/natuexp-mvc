@@ -12,8 +12,8 @@
                 <!-- Nombre del Paciente -->
                 <div class="col-md-6 mb-3">
                     <div class="form-material">
-                        <input type="text" class="form-control" id="nombre" name="nombre"
-                            placeholder="Nombre del paciente" value="<?php echo $paciente->nombre ?? ''; ?>">
+                        <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Ej. Fulano"
+                            value="<?php echo $paciente->nombre ?? ''; ?>">
                         <label for="nombre"><span class="text-danger">*</span>Nombre del Paciente</label>
                     </div>
                 </div>
@@ -22,7 +22,7 @@
                 <div class="col-md-6 mb-3">
                     <div class="form-material">
                         <input type="text" class="form-control" id="apellidos" name="apellidos"
-                            placeholder="Apellidos del paciente" value="<?php echo $paciente->apellidos ?? ''; ?>">
+                            placeholder="Ej. Sultano" value="<?php echo $paciente->apellidos ?? ''; ?>">
                         <label for="apellidos"><span class="text-danger">*</span>Apellidos del Paciente</label>
                     </div>
                 </div>
@@ -53,9 +53,9 @@
                 <div class="col-md-6 mb-3">
                     <div class="form-material">
                         <select class="form-control" id="sexo_id" name="sexo_id">
-                            <option>-- Selecciona una Opción --</option>
+                            <option value="">-- Selecciona una Opción --</option>
                             <?php foreach ($generos as $genero) { ?>
-                            <option <?php echo ($paciente->sexo_id === $genero->id ? 'selected' : ''); ?>
+                            <option <?php echo ((int)$paciente->sexo_id === (int)$genero->id ? 'selected' : ''); ?>
                                 value="<?php echo $genero->id; ?>"><?php echo $genero->sexo; ?></option>
                             <?php } ?>
                         </select>
@@ -63,10 +63,11 @@
                     </div>
                 </div>
 
+
                 <!-- Peso del Paciente -->
                 <div class="col-md-6 mb-3">
                     <div class="form-material">
-                        <input type="number" class="form-control" id="peso" name="peso" placeholder="Peso"
+                        <input type="number" class="form-control" id="peso" name="peso" placeholder="Ej. 70.00"
                             value="<?php echo $paciente->peso ?? ''; ?>">
                         <label for="peso"><span class="text-danger">*</span>Peso del Paciente</label>
                     </div>
@@ -75,8 +76,8 @@
                 <!-- Telefono del Paciente -->
                 <div class="col-md-6 mb-3">
                     <div class="form-material">
-                        <input type="number" class="form-control" id="telefono" name="telefono" placeholder="Teléfono"
-                            value="<?php echo $paciente->telefono ?? ''; ?>">
+                        <input type="number" class="form-control" id="telefono" name="telefono"
+                            placeholder="Ej. 4432014708" value="<?php echo $paciente->telefono ?? ''; ?>">
                         <label for="telefono"><span class="text-danger">*</span>Teléfono del Paciente</label>
                     </div>
                 </div>
@@ -85,7 +86,7 @@
                 <div class="col-md-6 mb-3">
                     <div class="form-material">
                         <input type="email" class="form-control" id="correo" name="correo"
-                            placeholder="Correo Electrónico" value="<?php echo $paciente->correo ?? ''; ?>">
+                            placeholder="Ej. example@email.mx" value="<?php echo $paciente->correo ?? ''; ?>">
                         <label for="correo"><span class="text-danger">*</span>Correo Electrónico del Paciente</label>
                     </div>
                 </div>
@@ -104,40 +105,28 @@
                 <div class="col-md-6 mb-3">
                     <div class="form-material">
                         <input type="text" class="form-control" id="nivel_azucar" name="nivel_azucar"
-                            placeholder="Nivel de Azúcar" value="<?php echo $paciente->nivel_azucar ?? ''; ?>">
+                            placeholder="Ej. 90 mg/dL" value="<?php echo $paciente->nivel_azucar ?? ''; ?>">
                         <label for="nivel_azucar"><span class="text-danger">*</span>Nivel de Azúcar del Paciente</label>
                     </div>
                 </div>
 
+
+
                 <!-- Estatura del Paciente -->
                 <div class="col-md-6 mb-3">
                     <div class="form-material d-flex align-items-center">
-                        <label for="estatura"><span class="text-danger">*</span>Estatura del Paciente (metros,
-                            centímetros)</label>
+                        <label for="estatura"><span class="text-danger">*</span> Estatura del Paciente (metros)</label>
                         <div class="input-group ml-3">
-                            <input type="number" class="form-control" id="metros" name="metros" placeholder="Metros"
-                                style="max-width: 250px;"
-                                value="<?php echo isset($paciente->metros) ? $paciente->metros : ''; ?>"
-                                oninput="calcularEstatura()">
+                            <input type="number" step="0.01" class="form-control" id="estatura" name="estatura"
+                                placeholder="Ej. 1.70" style="max-width: 250px;"
+                                value="<?php echo $paciente->estatura ?? ''; ?>">
                             <div class="input-group-append">
                                 <span class="input-group-text">m</span>
                             </div>
                         </div>
-                        <div class="input-group ml-3">
-                            <input type="number" class="form-control" id="centimetros" name="centimetros"
-                                placeholder="Centímetros" style="max-width: 250px;"
-                                value="<?php echo isset($paciente->centimetros) ? $paciente->centimetros : ''; ?>"
-                                oninput="calcularEstatura()">
-                            <div class="input-group-append">
-                                <span class="input-group-text">cm</span>
-                            </div>
-                        </div>
-                        <div class="input-group ml-3">
-                            <input type="text" class="form-control" id="estatura" name="estatura" readonly
-                                placeholder="Estatura Total" style="max-width: 250px;">
-                        </div>
                     </div>
                 </div>
+
 
 
 
@@ -146,7 +135,7 @@
                 <div class="col-md-6 mb-3">
                     <div class="form-material">
                         <input type="text" class="form-control" id="temperatura" name="temperatura"
-                            placeholder="Temperatura Corporal" value="<?php echo $paciente->temperatura ?? ''; ?>">
+                            placeholder="Ej. 36.60" value="<?php echo $paciente->temperatura ?? ''; ?>">
                         <label for="temperatura"><span class="text-danger">*</span>Temperatura Corporal del
                             Paciente</label>
                     </div>
@@ -190,33 +179,45 @@
 
             <!-- Campos adicionales -->
             <div id="cirugias_fields" class="row" style="display: none;">
-                <div class="col-md-6 mb-3">
-                    <label for="num_cirugias">Número de cirugías:</label>
-                    <input type="number" class="form-control" id="num_cirugias" name="num_cirugias"
-                        value="<?php echo isset($paciente->num_cirugias) ? htmlspecialchars($paciente->num_cirugias) : ''; ?>">
+                <div class="col-md-12 mb-3">
+                    <div class="form-material">
+                        <input type="number" class="form-control" id="num_cirugias" name="num_cirugias"
+                            value="<?php echo isset($paciente->num_cirugias) ? htmlspecialchars($paciente->num_cirugias) : ''; ?>"
+                            placeholder="Número de cirugías">
+                        <label for="num_cirugias"><span class="text-danger">*</span>Número de Cirugías</label>
+                    </div>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label for="desc_cirugias">Descripción de cirugías:</label>
-                    <textarea class="form-control" id="desc_cirugias"
-                        name="desc_cirugias"><?php echo isset($paciente->desc_cirugias) ? htmlspecialchars($paciente->desc_cirugias) : ''; ?></textarea>
+                <div class="col-md-12 mb-3">
+                    <div class="form-material">
+                        <textarea class="form-control" id="desc_cirugias" name="desc_cirugias" rows="4"
+                            placeholder="Descripción de las cirugías"><?php echo isset($paciente->desc_cirugias) ? htmlspecialchars($paciente->desc_cirugias) : ''; ?></textarea>
+                        <label for="desc_cirugias">Descripción de Cirugías</label>
+                    </div>
                 </div>
             </div>
 
             <div id="embarazos_fields" class="row" style="display: none;">
-                <div class="col-md-6 mb-3">
-                    <label for="num_embarazos">Número de embarazos:</label>
-                    <input type="number" class="form-control" id="num_embarazos" name="num_embarazos"
-                        value="<?php echo isset($paciente->num_embarazos) ? htmlspecialchars($paciente->num_embarazos) : ''; ?>">
+                <div class="col-md-12 mb-3">
+                    <div class="form-material">
+                        <input type="number" class="form-control" id="num_embarazos" name="num_embarazos"
+                            value="<?php echo isset($paciente->num_embarazos) ? htmlspecialchars($paciente->num_embarazos) : ''; ?>"
+                            placeholder="Número de embarazos">
+                        <label for="num_embarazos"><span class="text-danger">*</span>Número de Embarazos</label>
+                    </div>
                 </div>
             </div>
 
             <div id="abortos_fields" class="row" style="display: none;">
-                <div class="col-md-6 mb-3">
-                    <label for="num_abortos">Número de abortos:</label>
-                    <input type="number" class="form-control" id="num_abortos" name="num_abortos"
-                        value="<?php echo isset($paciente->num_abortos) ? htmlspecialchars($paciente->num_abortos) : ''; ?>">
+                <div class="col-md-12 mb-3">
+                    <div class="form-material">
+                        <input type="number" class="form-control" id="num_abortos" name="num_abortos"
+                            value="<?php echo isset($paciente->num_abortos) ? htmlspecialchars($paciente->num_abortos) : ''; ?>"
+                            placeholder="Número de abortos">
+                        <label for="num_abortos"><span class="text-danger">*</span>Número de Abortos</label>
+                    </div>
                 </div>
             </div>
+
 
 
 
@@ -292,21 +293,21 @@
                     </div>
                 </div>
 
+                <!-- Cargar nuevo archivo -->
                 <div class="col-md-6 mb-3">
                     <div class="form-material">
-                        <!-- Campo para cargar un nuevo archivo -->
-                        <input type="file" class="form-control" id="expediente_file" name="expediente_file"
-                            accept=".pdf,.docx,.doc" multiple>
+                        <input type="file" class="form-control" id="expediente_file" name="expediente_file[]"
+                            accept=".pdf,.docx,.doc,.png,.jpg,.jpeg,.webp" multiple>
                         <label for="expediente_file">
                             <span class="text-danger">*</span> Expediente Médico
                         </label>
                     </div>
                 </div>
 
+                <!-- Mostrar el archivo actual -->
                 <?php if (isset($paciente->expediente_file) && $paciente->expediente_file) { ?>
                 <div class="col-md-12 mb-3">
                     <div class="form-material">
-                        <!-- Mostrar el archivo actual -->
                         <label for="expediente_file">
                             <span class="text-danger">*</span> Expediente Médico Actual:
                         </label><br>
@@ -318,64 +319,87 @@
                 </div>
                 <?php } ?>
 
+                <!-- Mostrar imagen de perfil actual -->
+                <?php if (isset($paciente->foto) && $paciente->foto) { ?>
+                <div class="col-md-12 mb-3">
+                    <div class="form-material">
+                        <label for="foto_actual">
+                            <span class="text-danger">*</span> Foto de Perfil Actual:
+                        </label><br>
+                        <div class="d-flex">
+                            <?php 
+                            $imageFormats = ['png', 'jpg', 'jpeg', 'webp'];
+                            foreach ($imageFormats as $format) {
+                                $imagePath = $_ENV['HOST'] . '/img/patients/' . $paciente->foto . '.' . $format;
+                                $filePath = '../public/img/patients/' . $paciente->foto . '.' . $format;
+                                if (file_exists($filePath)) {
+                                    echo '<img src="' . $imagePath . '" class="img-thumbnail mr-2" width="150">';
+                                    break; // Mostrar solo la primera imagen que exista
+                                }
+                            }
+                            ?>
+                        </div>
+                    </div>
+                </div>
+                <?php } ?>
 
-
+                <!--DATOS DE DOMICILIO DEL PACIENTE-->
                 <legend>Domicilio del Paciente</legend>
 
                 <div class="col-md-6 mb-3">
                     <div class="form-material">
-                        <input type="text" class="form-control" id="n_calle_avenida" name="n_calle_avenida"
-                            placeholder="Calle o avenida" value="<?php echo $paciente->n_calle_avenida ?? ''; ?>">
-                        <label for="n_calle_avenida">Calle o Avenida</label>
+                        <input type="text" class="form-control" id="calle" name="calle" placeholder="Calle o avenida"
+                            value="<?php echo $paciente->calle ?? ''; ?>">
+                        <label for="calle">Calle o Avenida</label>
+                    </div>
+                </div>
+
+
+                <div class="col-md-6 mb-3">
+                    <div class="form-material">
+                        <input type="text" class="form-control" id="numero_exterior" name="numero_exterior"
+                            placeholder="Número exterior" value="<?php echo $paciente->numero_exterior ?? ''; ?>">
+                        <label for="numero_exterior">Número Exterior</label>
                     </div>
                 </div>
 
                 <div class="col-md-6 mb-3">
                     <div class="form-material">
-                        <input type="text" class="form-control" id="n_exterior" name="n_exterior"
-                            placeholder="Número exterior" value="<?php echo $paciente->n_exterior ?? ''; ?>">
-                        <label for="n_exterior">Número Exterior</label>
+                        <input type="text" class="form-control" id="numero_interior" name="numero_interior"
+                            placeholder="Número interior" value="<?php echo $paciente->numero_interior ?? ''; ?>">
+                        <label for="numero_interior">Número Interior</label>
                     </div>
                 </div>
 
                 <div class="col-md-6 mb-3">
                     <div class="form-material">
-                        <input type="text" class="form-control" id="n_interior" name="n_interior"
-                            placeholder="Número interior" value="<?php echo $paciente->n_interior ?? ''; ?>">
-                        <label for="n_interior">Número Interior</label>
+                        <input type="text" class="form-control" id="colonia" name="colonia"
+                            placeholder="Colonia o barrio" value="<?php echo $paciente->colonia ?? ''; ?>">
+                        <label for="colonia">Colonia o Barrio</label>
                     </div>
                 </div>
 
                 <div class="col-md-6 mb-3">
                     <div class="form-material">
-                        <input type="text" class="form-control" id="colonia_barrio" name="colonia_barrio"
-                            placeholder="Colonia o barrio" value="<?php echo $paciente->colonia_barrio ?? ''; ?>">
-                        <label for="colonia_barrio">Colonia o Barrio</label>
+                        <input type="text" class="form-control" id="municipio" name="municipio"
+                            placeholder="Municipio o delegación" value="<?php echo $paciente->municipio ?? ''; ?>">
+                        <label for="municipio">Municipio o Delegación</label>
                     </div>
                 </div>
 
                 <div class="col-md-6 mb-3">
                     <div class="form-material">
-                        <input type="text" class="form-control" id="municipio_delegacion" name="municipio_delegacion"
-                            placeholder="Municipio o delegación"
-                            value="<?php echo $paciente->municipio_delegacion ?? ''; ?>">
-                        <label for="municipio_delegacion">Municipio o Delegación</label>
+                        <input type="text" class="form-control" id="estado" name="estado"
+                            placeholder="Estado o provincia" value="<?php echo $paciente->estado ?? ''; ?>">
+                        <label for="estado">Estado o Provincia</label>
                     </div>
                 </div>
 
                 <div class="col-md-6 mb-3">
                     <div class="form-material">
-                        <input type="text" class="form-control" id="estado_provincia" name="estado_provincia"
-                            placeholder="Estado o provincia" value="<?php echo $paciente->estado_provincia ?? ''; ?>">
-                        <label for="estado_provincia">Estado o Provincia</label>
-                    </div>
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <div class="form-material">
-                        <input type="text" class="form-control" id="cp" name="cp" placeholder="Código postal"
-                            value="<?php echo $paciente->cp ?? ''; ?>">
-                        <label for="cp">Código Postal</label>
+                        <input type="text" class="form-control" id="codigo_postal" name="codigo_postal"
+                            placeholder="Código postal" value="<?php echo $paciente->codigo_postal ?? ''; ?>">
+                        <label for="codigo_postal">Código Postal</label>
                     </div>
                 </div>
             </div>
@@ -436,18 +460,5 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('cirugias').addEventListener('change', () => toggleField('cirugias'));
     document.getElementById('embarazos').addEventListener('change', () => toggleField('embarazos'));
     document.getElementById('abortos').addEventListener('change', () => toggleField('abortos'));
-});
-
-function calcularEstatura() {
-    const metros = parseFloat(document.getElementById('metros').value) || 0;
-    const centimetros = parseFloat(document.getElementById('centimetros').value) || 0;
-    const estaturaTotal = metros + (centimetros / 100);
-    document.getElementById('estatura').value = estaturaTotal.toFixed(2);
-}
-
-
-// Inicializar estatura al cargar la página si ya hay valores
-document.addEventListener('DOMContentLoaded', () => {
-    calcularEstatura();
 });
 </script>
