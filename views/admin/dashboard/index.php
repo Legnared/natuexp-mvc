@@ -6,7 +6,7 @@
             <div class="container bg-light">
                 <div class="row justify-content-center">
                     <div class="col-md-6 text-center">
-                        <a class="btn btn-hero btn-rounded btn-primary text-center" href="/admin/pacientes">
+                        <a class="btn btn-hero btn-rounded btn-primary text-center" href="/admin/expedientes">
                             <i class="fa fa-user-md mr-10"></i> Nuevo Paciente
                         </a>
                     </div>

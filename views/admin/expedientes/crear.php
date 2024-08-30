@@ -33,3 +33,5 @@
 </script>
 <?php unset($_SESSION['redirect']); // Elimina la variable de sesión después de usarla ?>
 <?php endif; ?>
+
+

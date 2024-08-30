@@ -60,78 +60,50 @@ class LoginController
 
     public static function crear(Router $router) {
         $alertas = [];
-        $usuario = new Usuario;
-        $direccion = new Direccion; // Instanciar el modelo Dirección
+        $usuario = new Usuario();
+        $direccion = new Direccion();
         
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Sincronizar los datos del usuario
             $usuario->sincronizar($_POST);
-        
-            // Validar los datos del usuario
             $alertas = $usuario->validar_cuenta();
-            if (!empty($alertas)) {
-                // Mostrar la vista con las alertas si hay errores
-                $data = [
-                    'title' => 'Crear Cuenta',
-                    'sitio' => 'www.natuexp.com',
-                    'usuario' => $usuario,
-                    'direccion' => $direccion,
-                    'alertas' => $alertas
-                ];
-                $router->render('auth/crear', $data, 'layout');
-                return;
-            }
-        
+            
             // Verificar si el usuario ya existe
-            $existeUsuario = Usuario::where('email', $usuario->email);
+            $existeUsuario = Usuario::whereFlexible('email', $usuario->email);
             if ($existeUsuario) {
                 Usuario::setAlerta('danger', 'El Usuario ya está registrado');
                 $alertas = Usuario::getAlertas();
-                $data = [
-                    'title' => 'Crear Cuenta',
-                    'sitio' => 'www.natuexp.com',
-                    'direccion' => $direccion,
-                    'usuario' => $usuario,
-                    'alertas' => $alertas
-                ];
-                $router->render('auth/crear', $data, 'layout');
-                return;
             }
-        
+            
             // Validar y guardar la dirección si se proporciona
             if (!empty($_POST['calle'])) {
                 $direccion->sincronizar($_POST);
-                $alertas = $direccion->validar();
-        
+                $alertas = array_merge($alertas, $direccion->validar());
+                
                 if (empty($alertas)) {
-                    // Guardar la dirección en la base de datos
                     $direccion->guardar();
-                    // Asignar el ID de la dirección al usuario
                     $usuario->direccion_id = $direccion->id;
-                } else {
-                    // Mostrar la vista con las alertas si hay errores en la dirección
-                    $data = [
-                        'title' => 'Crear Cuenta',
-                        'sitio' => 'www.natuexp.com',
-                        'usuario' => $usuario,
-                        'direccion' => $direccion,
-                        'alertas' => $alertas
-                    ];
-                    $router->render('auth/crear', $data, 'layout');
-                    return;
                 }
             }
-        
+            
+            // Verificar si hay alertas y mostrar la vista si es necesario
+            if (!empty($alertas)) {
+                self::renderView($router, $usuario, $direccion, $alertas);
+                return;
+            }
+            
+            // Asignar rol y estado del usuario
+            $usuario->rol_id = $_POST['rol_id'] ?? 1;
+            $usuario->estado = $_POST['estado'] ?? 1;
+            
             // Continuar con la creación del usuario
             $usuario->hashPassword();
             unset($usuario->password2);
             $usuario->crearToken();
             $usuario->fecha_creacion = date('Y-m-d H:i:s');
-        
-            try {
-                $resultado = $usuario->guardar();
             
-                if ($resultado) {
+            try {
+                if ($usuario->guardar()) {
                     $email = new Email($usuario->email, $usuario->nombre, $usuario->token, $usuario->fecha_creacion);
                     $email->enviarConfirmacion();
                     header('Location: /mensaje');
@@ -141,13 +113,15 @@ class LoginController
                 }
             } catch (\Exception $e) {
                 error_log('Error al guardar el usuario: ' . $e->getMessage());
-                // Puedes agregar más detalles aquí si es necesario
                 die('Error crítico al guardar el usuario.');
             }
-            
         }
         
         // Mostrar la vista de creación de cuenta
+        self::renderView($router, $usuario, $direccion, $alertas);
+    }
+    
+    private static function renderView(Router $router, Usuario $usuario, Direccion $direccion, array $alertas) {
         $data = [
             'title' => 'Crear Cuenta',
             'sitio' => 'www.natuexp.com',
@@ -160,6 +134,8 @@ class LoginController
     
     
     
+    
+    
     public static function olvide(Router $router)
     {
         $alertas = [];
@@ -168,7 +144,7 @@ class LoginController
             $alertas = $usuario->validarEmail();
             if (empty($alertas)) {
                 // Buscar el usuario
-                $usuario = Usuario::where('email', $usuario->email);
+                $usuario = Usuario::whereFlexible('email', $usuario->email);
                 if ($usuario && $usuario->confirmado) {
                     // Generar un nuevo token
                     $usuario->crearToken();
@@ -176,31 +152,31 @@ class LoginController
                     // Actualizar el usuario
                     $usuario->guardar();
                     // Enviar el email
-                    $email = new Email($usuario->email, $usuario->nombre, $usuario->token);
+                    $fechaHora = date('Y-m-d H:i:s'); // Valor de ejemplo
+                    $email = new Email($usuario->email, $usuario->nombre, $usuario->token, $fechaHora);
                     $email->enviarInstrucciones();
-
-                     // Imprimir la alerta
+    
+                    // Imprimir la alerta
                     $alertas['success'][] = 'Hemos enviado las instrucciones a tu email';
-                    //Usuario::setAlerta('success', 'Hemos enviado las instrucciones a tu email');
                 } else {
-                    $alertas['danger'][] = 'El Usuario no existe o no esta confirmado';
-                    //Usuario::setAlerta('danger', 'El Usuario no existe o no está confirmado');
-                   
+                    $alertas['danger'][] = 'El Usuario no existe o no está confirmado';
                 }
             }
         }
-
+    
         // Muestra la vista
         $router->render('auth/olvide', [
             'title' => 'Olvidé mi Contraseña',
             'alertas' => $alertas
-        ], 'layout' );
+        ], 'layout');
     }
+    
 
     public static function reestablecer(Router $router)
     {
         $token = s($_GET['token']);
         $token_valido = true;
+        $alertas = [];
 
         if (!$token) {
             header('Location: /login');
@@ -208,11 +184,10 @@ class LoginController
         }
 
         // Identificar el usuario con este token
-        $usuario = Usuario::where('token', $token);
+        $usuario = Usuario::whereFlexible('token', $token);
 
         if (empty($usuario)) {
             $alertas['danger'][] = 'Token No Válido, intenta de nuevo';
-            //Usuario::setAlerta('danger', 'Token No Válido, intenta de nuevo');
             $token_valido = false;
         }
 
@@ -228,7 +203,8 @@ class LoginController
                 $usuario->hashPassword();
 
                 // Eliminar el Token
-                $usuario->token = null;
+                $usuario->token = '';
+                $usuario->fecha_modificacion = date('Y-m-d H:i:s');
 
                 // Guardar el usuario en la BD
                 $resultado = $usuario->guardar();
@@ -236,19 +212,25 @@ class LoginController
                 if ($resultado) {
                     header('Location: /login');
                     exit();
+                } else {
+                    $alertas['danger'][] = 'No se pudo guardar el nuevo password. Inténtalo de nuevo.';
                 }
             }
         }
 
-        $alertas = Usuario::getAlertas();
+        // Si hay alertas, se mostrarán en la vista
+        if (empty($alertas)) {
+            $alertas = Usuario::getAlertas();
+        }
 
         // Muestra la vista
         $router->render('auth/reestablecer', [
             'title' => 'Reestablecer Contraseña',
             'alertas' => $alertas,
             'token_valido' => $token_valido
-        ], 'layout' );
+        ], 'layout');
     }
+
 
     public static function mensaje(Router $router)
     {
@@ -261,36 +243,52 @@ class LoginController
     {
         $alertas = [];
         $token = s($_GET['token']);
-
+        
         if (!$token) {
             header('Location: /');
             exit();
         }
-
-        // Encontrar al usuario con este token
-        $usuario = Usuario::where('token', $token);
-
-        if (empty($usuario)) {
-            $alertas['danger'][] = 'Token No Válido, la cuenta no se confirmo';
-            //Usuario::setAlerta('danger', 'Token No Válido, la cuenta no se confirmo');
+        
+       
+        
+        // Encontrar al usuario con este token usando whereFlexible
+        $usuario = Usuario::whereFlexible('token', $token);
+        
+        // Debug: Verificar si se encontró al usuario
+        if (is_null($usuario)) {
+            
+            $alertas['danger'][] = 'Token No Válido, la cuenta no se confirmó';
         } else {
             // Confirmar la cuenta
             $usuario->confirmado = 1;
-            $usuario->token = '';
+            $usuario->estado = 1;
+            $usuario->token = ''; // Limpiar el token después de la confirmación
             unset($usuario->password2);
-
+    
             // Guardar en la BD
-            $usuario->guardar();
-
-            Usuario::setAlerta('success', 'Cuenta confirmada Exitosamente!');
-            
-            $alertas = $usuario->getAlertas();
+            try {
+                $resultado = $usuario->guardar();
+                if ($resultado) {
+                    Usuario::setAlerta('success', 'Cuenta confirmada Exitosamente!');
+                } else {
+                    $alertas['danger'][] = 'Error al confirmar la cuenta. Intenta de nuevo.';
+                }
+            } catch (\Exception $e) {
+                // Debug: Mostrar el error
+                echo "Error al guardar el usuario: " . $e->getMessage() . "<br>";
+            }
+    
+            $alertas = $usuario->getAlertas(); // Obtener alertas actualizadas
         }
+        
+     
+        
         $router->render('auth/confirmar', [
             'title' => 'Confirma tu cuenta',
             'alertas' => $alertas
-        ], 'layout' );
+        ], 'layout');
     }
+    
 
     // Métodos para manejar errores 404 y 500
     public static function error404(Router $router)

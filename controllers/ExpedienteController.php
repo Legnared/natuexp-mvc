@@ -65,7 +65,6 @@ class ExpedienteController
     }
     
     
-
     public static function crear(Router $router)
     {
         session_start();
@@ -73,22 +72,23 @@ class ExpedienteController
             header('Location: /login');
             exit();
         }
-
+    
         $alertas = [];
         $generos = Sexo::all('ASC');
-        $paciente = new Pacient(); // Instanciar el modelo Pacient
-        $direccion = new Direccion(); // Instanciar el modelo Direccion
-        $antecedentes = new AntecedentesMedicos(); // Instanciar el modelo AntecedentesMedicos
-        $datosConsulta = new DatosConsulta(); // Instanciar el modelo DatosConsulta
-        $consultas = new Consulta(); // Instanciar el modelo Consulta
-
+        $paciente = new Pacient(); 
+        $direccion = new Direccion(); 
+        $antecedentes = new AntecedentesMedicos(); 
+        $datosConsulta = new DatosConsulta(); 
+        $consultas = new Consulta(); 
+    
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_POST = array_map('htmlspecialchars', $_POST);
             $_POST['usuario_id'] = $_SESSION['id'];
             $_POST['url_avance'] = md5(uniqid(rand(), true));
             $_POST['fecha_creacion'] = date('Y-m-d H:i:s');
             $_POST['estatus'] = 1;
-
+            $_POST['rol_id'] = 5; // Asignar automáticamente el rol de Paciente
+    
             // Manejo de checkboxes
             $checkboxes = [
                 'diabetes', 'cancer', 'obesidad', 'infartos', 'alergias',
@@ -98,20 +98,22 @@ class ExpedienteController
             foreach ($checkboxes as $checkbox) {
                 $_POST[$checkbox] = isset($_POST[$checkbox]) ? 1 : 0;
             }
-
+    
             // Manejo de archivos
             $alertas = self::manejarArchivos($_FILES, $alertas);
             $paciente->sincronizar($_POST);
             $alertas = array_merge($alertas, $paciente->validar());
-
+    
             if (empty($alertas)) {
                 try {
                     // Guardar paciente
-                    $resultado = $paciente->guardar();
-                    if ($resultado) {
+                    if ($paciente->guardar()) {
+                        // Obtener el id del paciente guardado
+                        $pacienteId = $paciente->id;
+                        
                         // Guardar antecedentes médicos
                         $antecedentes = new AntecedentesMedicos([
-                            'paciente_id' => $paciente->id,
+                            'paciente_id' => $pacienteId,
                             'diabetes' => $_POST['diabetes'],
                             'cancer' => $_POST['cancer'],
                             'obesidad' => $_POST['obesidad'],
@@ -137,8 +139,9 @@ class ExpedienteController
                         // Guardar dirección
                         if (isset($_POST['calle'])) {
                             $direccion = new Direccion([
-                                'paciente_id' => $paciente->id,
+                                'usuario_id' => $pacienteId,
                                 'calle' => $_POST['calle'],
+                                'pais' => $_POST['pais'],
                                 'numero_exterior' => $_POST['numero_exterior'],
                                 'numero_interior' => $_POST['numero_interior'],
                                 'colonia' => $_POST['colonia'],
@@ -152,7 +155,7 @@ class ExpedienteController
                         // Guardar datos de consulta
                         if (isset($_POST['presion_arterial'])) {
                             $datosConsulta = new DatosConsulta([
-                                'paciente_id' => $paciente->id,
+                                'paciente_id' => $pacienteId,
                                 'presion_arterial' => $_POST['presion_arterial'],
                                 'nivel_azucar' => $_POST['nivel_azucar'],
                                 'peso' => $_POST['peso'],
@@ -161,11 +164,11 @@ class ExpedienteController
                             ]);
                             $datosConsulta->guardar();
                         }
-
+    
                         // Guardar consulta
                         if (isset($_POST['motivo_consulta'])) {
                             $consultas = new Consulta([
-                                'paciente_id' => $paciente->id,
+                                'paciente_id' => $pacienteId,
                                 'motivo_consulta' => $_POST['motivo_consulta'],
                                 'tratamiento_sugerido' => $_POST['tratamiento_sugerido'] ?? '',
                                 'tiempo_tratamiento_clinico' => $_POST['tiempo_tratamiento_clinico'] ?? '',
@@ -176,10 +179,9 @@ class ExpedienteController
                             ]);
                             $consultas->guardar();
                         }
-
-                        $_SESSION['redirect'] = '/admin/expedientes'; // Asigna la URL de redirección
+    
+                        $_SESSION['redirect'] = '/admin/expedientes'; 
                         $alertas['success'][] = 'Paciente creado correctamente!, espere 5 segundos serás redireccionado al Listado de Pacientes';
-                        // No redirigir aquí; el redireccionamiento se maneja en la vista
                     } else {
                         $alertas['error'][] = 'El Paciente no se registró correctamente!';
                     }
@@ -188,7 +190,7 @@ class ExpedienteController
                 }
             }
         }
-
+    
         $router->render('admin/expedientes/crear', [
             'alertas' => $alertas,
             'titulo' => 'Crear Paciente',
@@ -200,12 +202,10 @@ class ExpedienteController
             'consultas' => $consultas
         ], 'admin-layout');
     }
-
-
-
+    
     
 
-
+    
     public static function editar(Router $router)
     {
         session_start();
@@ -213,221 +213,96 @@ class ExpedienteController
             header('Location: /login');
             exit();
         }
-
+    
         $alertas = [];
         $generos = Sexo::all('ASC');
         $id = $_GET['id'] ?? null;
-
+    
         if (!$id) {
             header('Location: /admin/pacientes');
-            exit;
+            exit();
         }
-
+    
         $paciente = Pacient::findId($id);
-        // debuguear($paciente, 'Paciente');
-
+    
         if (!$paciente) {
             header('Location: /admin/pacientes');
-            exit;
+            exit();
         }
-
-        // Inicializar modelos relacionados
-        $direccion = Direccion::findByPacienteId($id);
-        $antecedentes = AntecedentesMedicos::findByPacienteId($id);
-        $datosConsulta = DatosConsulta::findByPacienteId($id);
-        $consultas = Consulta::findByPacienteId($id);
-
-        // Convertir arrays a objetos si es necesario
-        if (is_array($direccion)) {
-            $direccion = new Direccion($direccion);
-        }
-        if (is_array($antecedentes)) {
-            $antecedentes = new AntecedentesMedicos($antecedentes);
-        }
-        if (is_array($datosConsulta)) {
-            $datosConsulta = new DatosConsulta($datosConsulta);
-        }
-        if (is_array($consultas)) {
-            $consultas = new Consulta($consultas);
-        }
-
-        // debuguear($direccion, 'Direccion');
-        // debuguear($antecedentes, 'Antecedentes');
-        //debuguear($datosConsulta, 'DatosConsulta');
-        //debuguear($consultas, 'Consultas');
-
+    
+        $direccion = Direccion::findByPacienteId($id) ?: new Direccion();
+       
+        $datosConsulta = DatosConsulta::findByPacienteId($id) ?: new DatosConsulta();
+        $consultas = Consulta::findByPacienteId($id) ?: new Consulta();
+        $antecedentes = AntecedentesMedicos::findByPacienteId($id) ?: new AntecedentesMedicos();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $_POST = array_map('htmlspecialchars', $_POST);
-            $_POST['estatura'] = isset($_POST['estatura']) ? floatval($_POST['estatura']) : 0;
+           // Sanitizar valores en $_POST
+            $_POST = array_map(function($value) {
+                return is_string($value) ? htmlspecialchars($value, ENT_QUOTES, 'UTF-8') : $value;
+            }, $_POST);
 
-            // Manejo de checkboxes
+            // Convertir checkboxes a 1 o 0
             $checkboxes = [
                 'diabetes', 'cancer', 'obesidad', 'infartos', 'alergias',
                 'depresion', 'artritis', 'estrenimiento', 'gastritis',
                 'comida_chatarra', 'fumas', 'bebes', 'cirugias', 'embarazos', 'abortos'
             ];
+
+    
             foreach ($checkboxes as $checkbox) {
                 $_POST[$checkbox] = isset($_POST[$checkbox]) ? 1 : 0;
             }
-
-            // debuguear($_POST, 'Datos POST');
-
-            $paciente->sincronizar($_POST);
+    
+            // Convertir campos adicionales a tipos adecuados
+            $_POST['num_cirugias'] = isset($_POST['num_cirugias']) ? (int) $_POST['num_cirugias'] : null;
+            $_POST['desc_cirugias'] = isset($_POST['desc_cirugias']) ? htmlspecialchars($_POST['desc_cirugias'], ENT_QUOTES, 'UTF-8') : '';
+            $_POST['num_embarazos'] = isset($_POST['num_embarazos']) ? (int) $_POST['num_embarazos'] : null;
+            $_POST['num_abortos'] = isset($_POST['num_abortos']) ? (int) $_POST['num_abortos'] : null;
+    
+            //debuguear($_POST);
+            // Manejo de archivos
             $alertas = self::manejarArchivos($_FILES, $alertas);
+    
+            $paciente->sincronizar($_POST);
             $alertas = array_merge($alertas, $paciente->validar());
-
+    
             if (empty($alertas)) {
                 try {
-                    // Guardar paciente
                     $resultado = $paciente->guardar();
-                    // debuguear($resultado, 'Resultado de guardar paciente');
-                    
+    
                     if ($resultado) {
-                        // Actualizar antecedentes médicos
-                        if ($antecedentes) {
-                            $antecedentes->sincronizar([
-                                'diabetes' => $_POST['diabetes'],
-                                'cancer' => $_POST['cancer'],
-                                'obesidad' => $_POST['obesidad'],
-                                'infartos' => $_POST['infartos'],
-                                'alergias' => $_POST['alergias'],
-                                'depresion' => $_POST['depresion'],
-                                'artritis' => $_POST['artritis'],
-                                'estrenimiento' => $_POST['estrenimiento'],
-                                'gastritis' => $_POST['gastritis'],
-                                'comida_chatarra' => $_POST['comida_chatarra'],
-                                'fumas' => $_POST['fumas'],
-                                'bebes' => $_POST['bebes'],
-                                'cirugias' => $_POST['cirugias'],
-                                'embarazos' => $_POST['embarazos'],
-                                'abortos' => $_POST['abortos'],
-                                'num_cirugias' => $_POST['num_cirugias'] ?? null,
-                                'desc_cirugias' => $_POST['desc_cirugias'] ?? '',
-                                'num_embarazos' => $_POST['num_embarazos'] ?? null,
-                                'num_abortos' => $_POST['num_abortos'] ?? null
-                            ]);
-                            $antecedentes->guardar();
-                        } else {
-                            // Crear antecedentes médicos si no existen
-                            $antecedentes = new AntecedentesMedicos([
-                                'paciente_id' => $paciente->id,
-                                'diabetes' => $_POST['diabetes'],
-                                'cancer' => $_POST['cancer'],
-                                'obesidad' => $_POST['obesidad'],
-                                'infartos' => $_POST['infartos'],
-                                'alergias' => $_POST['alergias'],
-                                'depresion' => $_POST['depresion'],
-                                'artritis' => $_POST['artritis'],
-                                'estrenimiento' => $_POST['estrenimiento'],
-                                'gastritis' => $_POST['gastritis'],
-                                'comida_chatarra' => $_POST['comida_chatarra'],
-                                'fumas' => $_POST['fumas'],
-                                'bebes' => $_POST['bebes'],
-                                'cirugias' => $_POST['cirugias'],
-                                'embarazos' => $_POST['embarazos'],
-                                'abortos' => $_POST['abortos'],
-                                'num_cirugias' => $_POST['num_cirugias'] ?? null,
-                                'desc_cirugias' => $_POST['desc_cirugias'] ?? '',
-                                'num_embarazos' => $_POST['num_embarazos'] ?? null,
-                                'num_abortos' => $_POST['num_abortos'] ?? null
-                            ]);
-                            $antecedentes->guardar();
-                        }
-
-                        // Actualizar dirección
+                        // Sincronizar y guardar antecedentes médicos
+                        $antecedentes->sincronizar($_POST);
+                       
+                        $antecedentes->guardar();
+                        
+                        
                         if (isset($_POST['calle'])) {
-                            if ($direccion) {
-                                $direccion->sincronizar([
-                                    'calle' => $_POST['calle'],
-                                    'numero_exterior' => $_POST['numero_exterior'],
-                                    'numero_interior' => $_POST['numero_interior'],
-                                    'colonia' => $_POST['colonia'],
-                                    'municipio' => $_POST['municipio'],
-                                    'estado' => $_POST['estado'],
-                                    'codigo_postal' => $_POST['codigo_postal']
-                                ]);
-                                $direccion->guardar();
-                            } else {
-                                // Crear dirección si no existe
-                                $direccion = new Direccion([
-                                    'paciente_id' => $paciente->id,
-                                    'calle' => $_POST['calle'],
-                                    'numero_exterior' => $_POST['numero_exterior'],
-                                    'numero_interior' => $_POST['numero_interior'],
-                                    'colonia' => $_POST['colonia'],
-                                    'municipio' => $_POST['municipio'],
-                                    'estado' => $_POST['estado'],
-                                    'codigo_postal' => $_POST['codigo_postal']
-                                ]);
-                                $direccion->guardar();
-                            }
+                            $direccion->sincronizar($_POST);
+                            $direccion->guardar();
                         }
-
-                        // Actualizar datos de consulta
+    
                         if (isset($_POST['presion_arterial'])) {
-                            if ($datosConsulta) {
-                                $datosConsulta->sincronizar([
-                                    'presion_arterial' => $_POST['presion_arterial'],
-                                    'nivel_azucar' => $_POST['nivel_azucar'],
-                                    'peso' => $_POST['peso'],
-                                    'estatura' => $_POST['estatura'],
-                                    'temperatura' => $_POST['temperatura']
-                                ]);
-                                $datosConsulta->guardar();
-                            } else {
-                                // Crear datos de consulta si no existen
-                                $datosConsulta = new DatosConsulta([
-                                    'paciente_id' => $paciente->id,
-                                    'presion_arterial' => $_POST['presion_arterial'],
-                                    'nivel_azucar' => $_POST['nivel_azucar'],
-                                    'peso' => $_POST['peso'],
-                                    'estatura' => $_POST['estatura'],
-                                    'temperatura' => $_POST['temperatura']
-                                ]);
-                                $datosConsulta->guardar();
-                            }
+                            $datosConsulta->sincronizar($_POST);
+                            $datosConsulta->guardar();
                         }
-
-                        // Actualizar consulta
+    
                         if (isset($_POST['motivo_consulta'])) {
-                            if ($consultas) {
-                                $consultas->sincronizar([
-                                    'motivo_consulta' => $_POST['motivo_consulta'],
-                                    'tratamiento_sugerido' => $_POST['tratamiento_sugerido'] ?? '',
-                                    'tiempo_tratamiento_clinico' => $_POST['tiempo_tratamiento_clinico'] ?? '',
-                                    'diagnostico' => $_POST['diagnostico'] ?? '',
-                                    'observaciones' => $_POST['observaciones'] ?? '',
-                                    'tiempo_tratamiento_sugerido' => $_POST['tiempo_tratamiento_sugerido'] ?? '',
-                                    'dosis_tratamiento' => $_POST['dosis_tratamiento'] ?? ''
-                                ]);
-                                $consultas->guardar();
-                            } else {
-                                // Crear consulta si no existe
-                                $consultas = new Consulta([
-                                    'paciente_id' => $paciente->id,
-                                    'motivo_consulta' => $_POST['motivo_consulta'],
-                                    'tratamiento_sugerido' => $_POST['tratamiento_sugerido'] ?? '',
-                                    'tiempo_tratamiento_clinico' => $_POST['tiempo_tratamiento_clinico'] ?? '',
-                                    'diagnostico' => $_POST['diagnostico'] ?? '',
-                                    'observaciones' => $_POST['observaciones'] ?? '',
-                                    'tiempo_tratamiento_sugerido' => $_POST['tiempo_tratamiento_sugerido'] ?? '',
-                                    'dosis_tratamiento' => $_POST['dosis_tratamiento'] ?? ''
-                                ]);
-                                $consultas->guardar();
-                            }
+                            $consultas->sincronizar($_POST);
+                            $consultas->guardar();
                         }
-
-                        // Redirigir a la lista de pacientes
-                        header('Location: /admin/expedientes');
-                        exit;
+    
+                        $_SESSION['redirect'] = '/admin/expedientes'; 
+                        $alertas['success'][] = 'Paciente actualizado correctamente, espera 5 segundos para ser redireccionado al Listado de Pacientes';
+                    } else {
+                        $alertas['error'][] = 'El Paciente no se actualizó correctamente!';
                     }
-                } catch (Exception $e) {
-                    debuguear($e->getMessage(), 'Error');
-                    $alertas['danger'][] = 'Ocurrió un error al guardar la información.';
+                } catch (\Exception $e) {
+                    $alertas['error'][] = 'Error al guardar el paciente: ' . $e->getMessage();
                 }
             }
         }
-
+    
         $router->render('admin/expedientes/editar', [
             'alertas' => $alertas,
             'titulo' => 'Editar Paciente',
@@ -439,88 +314,122 @@ class ExpedienteController
             'consultas' => $consultas
         ], 'admin-layout');
     }
-
-
     
+    
+
 
     private static function manejarArchivos($files, $alertas) {
         $fileTmpPath = '../public/docs/patients/';
         $imageTmpPath = '../public/img/patients/';
-
+        
         if (!is_dir($fileTmpPath)) mkdir($fileTmpPath, 0777, true);
         if (!is_dir($imageTmpPath)) mkdir($imageTmpPath, 0777, true);
-
-        if (!empty($files['expediente_file']['tmp_name'][0])) {
-            foreach ($files['expediente_file']['tmp_name'] as $key => $tmp_name) {
-                $fileName = $files['expediente_file']['name'][$key];
-                $fileTmpName = $files['expediente_file']['tmp_name'][$key];
-                $fileSize = $files['expediente_file']['size'][$key];
-                $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-
-                if (in_array($fileExtension, ['png', 'jpg', 'jpeg', 'webp'])) {
-                    $newFileName = md5(uniqid(rand(), true));
-                    $destination = $imageTmpPath . '/' . $newFileName . '.' . $fileExtension;
-
-                    $imagen = Image::make($fileTmpName)->fit(800, 800)->encode($fileExtension, 80);
-                    $imagen->save($destination);
-
-                    $_POST['foto'] = $newFileName . '.' . $fileExtension;
-                } elseif (in_array($fileExtension, ['pdf', 'doc', 'docx'])) {
-                    $newFileName = md5(uniqid(rand(), true)) . '.' . $fileExtension;
-                    $destination = $fileTmpPath . '/' . $newFileName;
-
-                    if ($fileSize > 10000000) {
-                        Pacient::setAlert('error', 'El archivo es demasiado grande');
+        
+        $expedienteFileNames = [];
+        $imagenFileNames = [];
+    
+        // Manejo de archivos de documentos
+        if (!empty($files['documentos_file']['tmp_name'][0])) {
+            foreach ($files['documentos_file']['tmp_name'] as $key => $tmp_name) {
+                $fileName = $files['documentos_file']['name'][$key];
+                $fileTmpName = $files['documentos_file']['tmp_name'][$key];
+                $fileSize = $files['documentos_file']['size'][$key];
+                $fileExtension = pathinfo($fileName, PATHINFO_EXTENSION);
+    
+                $newFileName = md5(time() . $fileName) . '.' . $fileExtension;
+    
+                if (in_array($fileExtension, ['pdf', 'doc', 'docx'])) {
+                    if (move_uploaded_file($fileTmpName, $fileTmpPath . $newFileName)) {
+                        $expedienteFileNames[] = $newFileName;
                     } else {
-                        move_uploaded_file($fileTmpName, $destination);
-                        $_POST['expediente_file'] = $newFileName;
+                        $alertas['error'][] = 'No se pudo subir el archivo ' . $fileName;
                     }
                 } else {
-                    $alertas['danger'][] = 'Tipo de archivo no permitido';
+                    $alertas['error'][] = 'Formato de archivo no soportado: ' . $fileName;
                 }
             }
         }
+    
+        // Manejo de archivos de imágenes
+        if (!empty($files['imagenes_file']['tmp_name'][0])) {
+            foreach ($files['imagenes_file']['tmp_name'] as $key => $tmp_name) {
+                $fileName = $files['imagenes_file']['name'][$key];
+                $fileTmpName = $files['imagenes_file']['tmp_name'][$key];
+                $fileSize = $files['imagenes_file']['size'][$key];
+                $fileExtension = pathinfo($fileName, PATHINFO_EXTENSION);
+    
+                $newFileName = md5(time() . $fileName) . '.' . $fileExtension;
+    
+                if (in_array($fileExtension, ['jpg', 'jpeg', 'png', 'webp'])) {
+                    if (move_uploaded_file($fileTmpName, $imageTmpPath . $newFileName)) {
+                        $imagenFileNames[] = $newFileName;
+                    } else {
+                        $alertas['error'][] = 'No se pudo subir la imagen ' . $fileName;
+                    }
+                } else {
+                    $alertas['error'][] = 'Formato de archivo no soportado: ' . $fileName;
+                }
+            }
+        }
+    
+        // Aquí puedes guardar las rutas de los archivos en la base de datos
+        // Por ejemplo, en un campo 'expediente_file' en la tabla de pacientes
+        if (!empty($expedienteFileNames)) {
+            $_POST['expediente_file'] = implode(',', $expedienteFileNames);
+        }
+        if (!empty($imagenFileNames)) {
+            $_POST['foto'] = implode(',', $imagenFileNames);
+        }
+    
         return $alertas;
     }
+    
+    
+    
 
     public static function eliminar(Router $router)
     {
         session_start();
-        is_admin();
-        // Verificar si el usuario tiene permisos de administrador
+        is_admin(); // Verifica que el usuario tenga permisos de administrador
+
+        // Asegúrate de que el usuario esté autenticado
         if (!is_admin()) {
-        header('Location: /admin/dashboard/index');
-        exit();
-        }// Asegúrate de que el usuario esté autenticado
-        $id = $_GET['id'] ?? null; // Usa null si no existe el parámetro
-    
+            header('Location: /admin/dashboard/index');
+            exit();
+        }
+
+        $id = $_POST['id'] ?? null; // Usa POST para obtener el ID
+
         // Verifica si el ID es válido
         if (!is_numeric($id)) {
             header('Location: /admin/expedientes');
-            exit;
+            exit();
         }
-    
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Encuentra al paciente por ID
-            $paciente = Paciente::find($id);
-    
+            $paciente = Pacient::find($id);
+
             if ($paciente) {
                 // Establece la fecha de eliminación
                 $paciente->fecha_eliminacion = date('Y-m-d H:i:s');
                 // Llama al método eliminar
                 $paciente->eliminar('estatus'); // Usa 'estatus' o el nombre de la columna que maneja el estado
                 header('Location: /admin/expedientes');
+                exit();
             } else {
                 // Maneja el caso en que no se encuentra el paciente
                 $alertas['danger'][] = 'Paciente no encontrado.';
             }
         }
-    
-        // Renderiza la vista para confirmar eliminación
+        
+        // Renderizar la vista de edición con todos los datos cargados
         $router->render('admin/expedientes', [
-            'titulo' => 'Eliminar Paciente'
-        ], 'site-layout');
+            'titulo' => 'Eliminar Paciente',
+            'alertas' => $alertas ?? [] // Pasa las alertas a la vista si existen
+        ], 'admin-layout');
     }
+
     
 
     public static function verExpediente(Router $router)
@@ -545,7 +454,7 @@ class ExpedienteController
     
         // Buscar al paciente usando el token
         $generos = Sexo::find($id); // Obtener todos los géneros disponibles
-        $paciente = Paciente::findByUrlAvance($token);
+        $paciente = Pacient::findByUrlAvance($token);
     
         // Verificar si el paciente existe y pertenece al usuario autenticado
         if (!$paciente || ($paciente->usuario_id !== $_SESSION['id'] && !is_admin())) {

@@ -8,10 +8,12 @@ use Controllers\DashboardController;
 use Controllers\SitioController;
 use Controllers\CitaController;
 use Controllers\SystemController;
+use Controllers\UsuariosController;
 use Controllers\RolesController;
 use Controllers\PermisosController;
 use Controllers\RecetaMedicaController;
 use Controllers\ExpedienteController;
+use Controllers\ApiController;
 
 use MVC\Router;
 
@@ -102,13 +104,24 @@ $router->get('/admin/system/configuracion', [SystemController::class, 'configura
 $router->get('/admin/system/usuarios', [SystemController::class, 'gestionUsuarios']);
 
 
+// Configuración de Usuarios
+$router->get('/admin/system/usuarios', [UsuariosController::class, 'index']);
+$router->get('/admin/system/usuarios/crear', [UsuariosController::class, 'crear']);
+$router->post('/admin/system/usuarios/crear', [UsuariosController::class, 'crear']);
+$router->get('/admin/system/usuarios/editar', [UsuariosController::class, 'editar']);
+$router->post('/admin/system/usuarios/editar', [UsuariosController::class, 'editar']);
+$router->post('/admin/system/usuarios/eliminar', [UsuariosController::class, 'eliminar']);
+$router->post('/admin/system/usuarios/activar', [UsuariosController::class, 'activar']);
+
+
+
 // Configuración de Roles
 $router->get('/admin/system/roles', [RolesController::class, 'index']);
 $router->get('/admin/system/roles/crear', [RolesController::class, 'crear']);
 $router->post('/admin/system/roles/crear', [RolesController::class, 'crear']);
 $router->get('/admin/system/roles/editar', [RolesController::class, 'editar']);
 $router->post('/admin/system/roles/editar', [RolesController::class, 'editar']);
-$router->get('/admin/system/roles/eliminar', [RolesController::class, 'eliminar']);
+$router->post('/admin/system/roles/eliminar', [RolesController::class, 'eliminar']);
 
 //Configuracion de Permisos
 // Rutas para los permisos del sistema
@@ -133,6 +146,10 @@ $router->get('/admin/system/perfil/cambiar-foto', [SystemController::class, 'cam
 $router->post('/admin/system/perfil/cambiar-foto', [SystemController::class, 'cambiarFoto']);
 
 
+// Añade esta línea a tu archivo de enrutamiento
+// $router->get('/api/codigo_postal', [ApiController::class, 'getDatosCodigoPostal']);
+
+//$router->get('/usuario/buscarDireccion', [UsuariosController::class, 'buscarDireccion']);
 
 // Página de Error pagina no encontrada
 // $router->get('/404', [PaginasController::class, 'error']);

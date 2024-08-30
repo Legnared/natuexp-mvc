@@ -41,7 +41,7 @@ class Consulta extends ActiveRecord {
     }
 
     // Mensajes de validación
-    public function validar() {
+    public function validarConsulta() {
         $alertas = [];
 
         if(!$this->motivo_consulta) {
@@ -99,4 +99,26 @@ class Consulta extends ActiveRecord {
         
         return new static(); // Devuelve una nueva instancia
     }
+
+    public static function findByConsultaId($consulta_id) {
+        $query = "SELECT * FROM " . static::$tabla . " WHERE id = ?";
+        $stmt = self::$db->prepare($query);
+        
+        if (!$stmt) {
+            die('Error en la preparación de la consulta: ' . self::$db->error);
+        }
+    
+        $stmt->bind_param('i', $consulta_id);
+        $stmt->execute();
+        $resultado = $stmt->get_result();
+        
+        if ($resultado->num_rows > 0) {
+            $datos = $resultado->fetch_assoc();
+            return new static($datos);
+        }
+    
+        return new static(); // Devuelve una nueva instancia si no se encontraron datos
+    }
+    
+    
 }

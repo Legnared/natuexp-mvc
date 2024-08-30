@@ -3,7 +3,7 @@
     <a href="/admin/system/roles" class="btn btn-alt-primary mt-3 float-right">
         Regresar <i class="si si-action-undo ml-5"></i>
     </a>
-    <?php echo $titulo; ?> | Gestión de Roles
+    <?php echo $titulo; ?> | Gestión de Roles | Crear Nuevo Rol
 </h2>
 <div class="block">
     <div class="block-content">

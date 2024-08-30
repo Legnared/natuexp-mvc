@@ -1,9 +1,11 @@
 <?php
 namespace Controllers;
 
-use Model\Paciente;
+use Model\Pacient;
 use Model\Sexo;
 use Model\Usuario;
+use Model\Consulta;
+use Model\DatosConsulta;
 use MVC\Router;
 
 class RecetaMedicaController
@@ -28,13 +30,23 @@ class RecetaMedicaController
         }
 
         // Buscar al paciente usando el token
-        $paciente = Paciente::where('url_avance', $token);
-
-       
+        $paciente = Pacient::where('url_avance', $token);
+        if (!$paciente) {
+            header('Location: /admin/dashboard/');
+            exit();
+        }
 
         // Obtener el nombre del género desde el modelo Sexo
         $sexo = Sexo::findId($paciente->sexo_id);
         $nombre_sexo = $sexo ? $sexo->sexo : 'Desconocido';
+
+        // Obtener las consultas relacionadas con el paciente
+        $consultas = Consulta::findByPacienteId($paciente->id);
+        //debuguear($consultas);
+
+       // Obtener los datos de consulta por paciente_id
+        $datos_consulta = DatosConsulta::findByPacienteId($paciente->id);
+
 
         // Obtener los datos del usuario autenticado
         $usuario = Usuario::findId($_SESSION['id']);
@@ -42,21 +54,20 @@ class RecetaMedicaController
         // Preparar los datos para la vista
         $router->render('admin/receta/index', [
             'titulo' => 'Diagnóstico del Paciente | Receta',
-            'nombre_paciente' => $paciente->nombre . " " . $paciente->apellidos,
-            'edad' => $paciente->edad,
-            'sexo' => $nombre_sexo, // Usar el nombre del género
-            'peso' => $paciente->peso,
-            'estatura' => $paciente->estatura,
-            'presion_arterial' => $paciente->presion_arterial,
-            'nivel_azucar' => $paciente->nivel_azucar,
-            'motivo_consulta' => $paciente->motivo_consulta,
-            'observaciones' => $paciente->observaciones,
-            'tiempo_tratamiento_clinico' => $paciente->tiempo_tratamiento_clinico,
-            'tiempo_tratamiento_sujerido' => $paciente->tiempo_tratamiento_sujerido,
-            'diagnostico' => $paciente->diagnostico,
-            'tratamiento_sujerido' => $paciente->tratamiento_sujerido,
-            'dosis_tratamiento' => $paciente->dosis_tratamiento,
-
+            'nombre_paciente' => htmlspecialchars($paciente->nombre . " " . $paciente->apellidos),
+            'edad' => htmlspecialchars($paciente->edad),
+            'sexo' => htmlspecialchars($nombre_sexo),
+            'peso' => htmlspecialchars($datos_consulta ? $datos_consulta->peso : 'N/A'),
+            'estatura' => htmlspecialchars($datos_consulta ? $datos_consulta->estatura : 'N/A'),
+            'presion_arterial' => htmlspecialchars($datos_consulta ? $datos_consulta->presion_arterial : 'N/A'),
+            'nivel_azucar' => htmlspecialchars($datos_consulta ? $datos_consulta->nivel_azucar : 'N/A'),
+            'motivo_consulta' => htmlspecialchars($consultas ? $consultas->motivo_consulta : 'N/A'),
+            'observaciones' => htmlspecialchars($consultas ? $consultas->observaciones : 'N/A'),
+            'tiempo_tratamiento_clinico' => htmlspecialchars($consultas ? $consultas->tiempo_tratamiento_clinico : 'N/A'),
+            'tiempo_tratamiento_sujerido' => htmlspecialchars($consultas ? $consultas->tiempo_tratamiento_sugerido : 'N/A'),
+            'diagnostico' => htmlspecialchars($consultas ? $consultas->diagnostico : 'N/A'),
+            'tratamiento_sujerido' => htmlspecialchars($consultas ? $consultas->tratamiento_sugerido : 'N/A'),
+            'dosis_tratamiento' => htmlspecialchars($consultas ? $consultas->dosis_tratamiento : 'N/A'),
             'medico' => $usuario
         ], 'admin-layout');
     }

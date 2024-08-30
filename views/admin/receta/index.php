@@ -1,7 +1,7 @@
 
 <h2 class="content-heading d-print-none">
     <?php echo htmlspecialchars($titulo); ?><br><br>
-    <a href="/admin/pacientes" class="btn btn-alt-primary float-left">
+    <a href="/admin/expedientes" class="btn btn-alt-primary float-left">
         Regresar <i class="si si-action-undo ml-5"></i>
     </a>
 </h2>

@@ -82,6 +82,16 @@
                                     </div>
                                 </div>
                                 <!-- Datos de Dirección -->
+
+                                <div class="form-group row">
+                                    <div class="col-12">
+                                        <div class="form-material floating">
+                                            <input type="text" class="form-control" id="pais" name="pais" value="<?php echo $direccion->pais; ?>">
+                                            <label for="pais">País</label>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="form-group row">
                                     <div class="col-12">
                                         <div class="form-material floating">

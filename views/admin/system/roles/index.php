@@ -38,7 +38,7 @@
                                                 Acciones
                                             </button>
                                             <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
-                                                <?php if ($_SESSION["perfil"] == "admin") : ?>
+                                                <?php if (is_admin()) : ?>
                                                 <div class="dropdown-divider"></div>
                                                 <form method="POST" action="/admin/system/roles/eliminar">
                                                     <input type="hidden" name="id" value="<?php echo $rol->id; ?>">
@@ -48,6 +48,7 @@
                                                 </form>
                                                 <?php endif ?>
                                             </div>
+
                                         </div>
                                     </div>
                                 </div>

@@ -95,19 +95,35 @@ class AntecedentesMedicos extends ActiveRecord {
         return $alertas;
     }
 
-    // En los modelos
     public static function findByPacienteId($pacienteId) {
         $query = "SELECT * FROM " . static::$tabla . " WHERE paciente_id = ?";
+    
         $stmt = self::$db->prepare($query);
+        if (!$stmt) {
+            throw new Exception("Error al preparar la consulta: " . self::$db->error);
+        }
+    
         $stmt->bind_param('i', $pacienteId);
         $stmt->execute();
+    
         $resultado = $stmt->get_result();
-        
+        if ($resultado === false) {
+            throw new Exception("Error al obtener el resultado: " . $stmt->error);
+        }
+    
         if ($resultado->num_rows > 0) {
             $datos = $resultado->fetch_assoc();
             return new static($datos);
         }
-        
-        return new static(); // Devuelve una nueva instancia
+    
+        return new static();
+    }
+    
+    public function sincronizar($args = []) {
+        foreach ($args as $key => $value) {
+            if (property_exists($this, $key) && !is_null($value)) {
+                $this->$key = $value;
+            }
+        }
     }
 }

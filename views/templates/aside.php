@@ -13,7 +13,7 @@
               <!-- User Info -->
               <div class="content-header-item">
                   <a class="img-link mr-5" href="be_pages_generic_profile.html">
-                      <img class="img-avatar img-avatar32" src="assets/img/avatars/avatar15.jpg" alt="">
+                      <img class="img-avatar img-avatar32" src="/build/assets/img/avatars/avatar15.jpg" alt="">
                   </a>
                   <a class="align-middle link-effect text-primary-dark font-w600" href="be_pages_generic_profile.html">John Smith</a>
               </div>
@@ -77,28 +77,28 @@
                   <ul class="nav-users push">
                       <li>
                           <a href="be_pages_generic_profile.html">
-                              <img class="img-avatar" src="assets/img/avatars/avatar3.jpg" alt="">
+                              <img class="img-avatar" src="/build/assets/img/avatars/avatar3.jpg" alt="">
                               <i class="fa fa-circle text-success"></i> Betty Kelley
                               <div class="font-w400 font-size-xs text-muted">Photographer</div>
                           </a>
                       </li>
                       <li>
                           <a href="be_pages_generic_profile.html">
-                              <img class="img-avatar" src="assets/img/avatars/avatar13.jpg" alt="">
+                              <img class="img-avatar" src="/build/assets/img/avatars/avatar13.jpg" alt="">
                               <i class="fa fa-circle text-success"></i> Adam McCoy
                               <div class="font-w400 font-size-xs text-muted">Web Designer</div>
                           </a>
                       </li>
                       <li>
                           <a href="be_pages_generic_profile.html">
-                              <img class="img-avatar" src="assets/img/avatars/avatar3.jpg" alt="">
+                              <img class="img-avatar" src="/build/assets/img/avatars/avatar3.jpg" alt="">
                               <i class="fa fa-circle text-warning"></i> Lori Moore
                               <div class="font-w400 font-size-xs text-muted">UI Designer</div>
                           </a>
                       </li>
                       <li>
                           <a href="be_pages_generic_profile.html">
-                              <img class="img-avatar" src="assets/img/avatars/avatar16.jpg" alt="">
+                              <img class="img-avatar" src="/build/assets/img/avatars/avatar16.jpg" alt="">
                               <i class="fa fa-circle text-danger"></i> Justin Hunt
                               <div class="font-w400 font-size-xs text-muted">Copywriter</div>
                           </a>

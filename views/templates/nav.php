@@ -131,6 +131,25 @@ $current_page = strtok($_SERVER['REQUEST_URI'], '?'); // Obtener la URL actual y
                     </ul>
                 </li>
 
+                 <!-- Agregar enlace para Usuarios -->
+                 <li class="nav-main-heading"><span class="sidebar-mini-visible">S</span><span
+                        class="sidebar-mini-hidden">Usuarios</span></li>
+
+                <li class="<?php echo (strpos($current_page, '/admin/system/usuarios') !== false) ? 'open' : ''; ?>">
+                    <a class="nav-submenu <?php echo (strpos($current_page, '/admin/system/usuarios') !== false) ? 'active' : ''; ?>"
+                        data-toggle="nav-submenu" href="#">
+                        <i class="fa fa-users"></i><span class="sidebar-mini-hide">Usuarios</span>
+                    </a>
+                    <ul>
+                        <li>
+                            <a href="/admin/system/usuarios"
+                                class="<?php echo ($current_page == '/admin/system/usuarios/') ? 'active' : ''; ?>">
+                                <span class="sidebar-mini-hide">Gestión de Usuarios</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
                 <!-- Agregar enlace para Roles -->
                 <li class="nav-main-heading"><span class="sidebar-mini-visible">S</span><span
                         class="sidebar-mini-hidden">Sistema</span></li>

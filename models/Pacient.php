@@ -34,7 +34,7 @@ class Pacient extends ActiveRecord
     // Relación con la tabla consultas
     public function consultas()
     {
-        return consultas::consultarSQL("SELECT * FROM consultas WHERE paciente_id = '{$this->id}'");
+        return Consulta::consultarSQL("SELECT * FROM consultas WHERE paciente_id = '{$this->id}'");
     }
 
     // Relación con la tabla direcciones
@@ -93,21 +93,29 @@ class Pacient extends ActiveRecord
         if (!$this->apellidos) {
             $alertas['error'][] = 'Los Apellido(s) del Paciente son Obligatorios';
         }
+        if (!$this->telefono) {
+            $alertas['error'][] = 'El Teléfono del Paciente son Obligatorio';
+        }
 
           // Validación básica con filter_var
         if (!filter_var($this->correo, FILTER_VALIDATE_EMAIL)) {
-            $alertas['danger'][] = 'Email no válido';
+            $alertas['error'][] = 'Email no válido';
         }
 
         // Expresión regular para validación adicional
         $emailPattern = '/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/';
         if (!preg_match($emailPattern, $this->correo)) {
-            $alertas['danger'][] = 'El Correo Electrónico no es válido';
+            $alertas['error'][] = 'El Correo Electrónico no es válido';
         }
 
         if (!$this->fecha_nacimiento) {
             $alertas['error'][] = 'La Fecha de Nacimiento del Paciente es Obligatoria';
         }
+        if (!$this->edad) {
+            $alertas['error'][] = 'La Edad se calcula con la Fecha Nacimiento y es Obligatoria';
+        }
+
+        $this->validarExpedienteFile();
 
         return $alertas;
     }
@@ -139,4 +147,29 @@ class Pacient extends ActiveRecord
         $query = "SELECT * FROM pacientes WHERE url_avance = '$url_avance' AND estatus = '1'";
         return self::consultarSQL($query);
     }
+
+    public function validarExpedienteFile() {
+        if (isset($_FILES['expediente_file']) && !empty($_FILES['expediente_file']['name'][0])) {
+            foreach ($_FILES['expediente_file']['tmp_name'] as $key => $tmp_name) {
+                $fileName = $_FILES['expediente_file']['name'][$key];
+                $fileSize = $_FILES['expediente_file']['size'][$key];
+                $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+                
+                // Validar el tamaño del archivo (10MB máximo)
+                if ($fileSize > 10000000) {
+                    self::$alertas['danger'][] = "El archivo {$fileName} es demasiado grande. El tamaño máximo permitido es de 10MB.";
+                }
+                
+                // Validar la extensión del archivo
+                $allowedExtensions = ['pdf', 'doc', 'docx', 'png', 'jpg', 'jpeg', 'webp'];
+                if (!in_array($fileExtension, $allowedExtensions)) {
+                    self::$alertas['error'][] = "El tipo de archivo para {$fileName} no está permitido. Los formatos permitidos son: PDF, DOC, DOCX, PNG, JPG, JPEG, WEBP.";
+                }
+            }
+        } else {
+            self::$alertas['error'][] = "El campo Expediente Médico es obligatorio.";
+        }
+    }
+    
+    
 }

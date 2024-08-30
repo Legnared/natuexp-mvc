@@ -14,7 +14,8 @@
                         <th class="d-none d-sm-table-cell" style="width: 15%;"></th>
                         <th>Nombre del Paciente</th>
                         <th>Motivo de Consulta</th>
-                        <th>Estudios Clínicos Previos</th>
+                        <th>Estudios Clínicos Previos Archivos</th>
+                        <th>Estudios Clínicos Previos Imagen</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -42,11 +43,22 @@
                             ?>
                         </td>
                         <td>
+                            <!-- Botón para ver el análisis clínico -->
                             <a href="<?php echo $_ENV['HOST'] . '/docs/patients/' . $paciente->expediente_file; ?>"
                                 class="btn btn-rounded btn-outline-success mr-5 mb-5" target="_blank">
-                                <i class="fa fa-file-pdf-o mr-5"></i>Click aquí para ver análisis clínico
+                                <i class="fa fa-file-pdf-o mr-5"></i>Click aquí para ver análisis Clínico del Paciente
                             </a>
+
                         </td>
+                        <td>
+                    
+                            <!-- Mostrar la imagen del paciente -->
+                            <div class="patient-image mt-3">
+                                <img src="<?php echo $_ENV['HOST'] . '/img/patients/' . $paciente->foto; ?>"
+                                    alt="Imagen del Paciente" style="max-width: 50%; height: auto;" />
+                            </div>
+                        </td>
+
                         <td class="d-none d-sm-table-cell">
                             <div class="center col-xl-6">
                                 <div class="push">
@@ -72,14 +84,15 @@
                                                 </a>
 
                                                 <?php if (is_admin()) : ?>
-                                                <div class="dropdown-divider"></div>
-                                                <form method="POST" action="/admin/expedientes/eliminar">
-                                                    <input type="hidden" name="id" value="<?php echo $paciente->id; ?>">
-                                                    <button class="dropdown-item btn btn-alt-danger" type="submit">
-                                                        <i class="fa fa-solid fa-user-times"></i> Eliminar
-                                                    </button>
-                                                </form>
-                                                <?php endif ?>
+                                            <div class="dropdown-divider"></div>
+                                            <form method="POST" action="/admin/expedientes/eliminar">
+                                                <input type="hidden" name="id" value="<?php echo $paciente->id; ?>">
+                                                <button class="dropdown-item btn btn-alt-danger" type="submit">
+                                                    <i class="fa fa-solid fa-user-times"></i> Eliminar
+                                                </button>
+                                            </form>
+                                            <?php endif ?>
+
                                             </div>
                                         </div>
                                     </div>

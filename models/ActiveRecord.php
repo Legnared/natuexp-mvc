@@ -9,6 +9,9 @@ class ActiveRecord
     protected static $db;
     protected static $tabla = '';
     protected static $columnasDB = [];
+    
+    protected static $orWhereConditions = [];
+    protected static $whereConditions = [];
 
     // Alertas y Mensajes
     protected static $alertas = [];
@@ -238,12 +241,7 @@ class ActiveRecord
         return $resultado;
     }
 
-    // Busqueda Where con Columna 
-    public static function where($columna, $valor) {
-        $query = "SELECT * FROM " . static::$tabla . " WHERE ${columna} = '${valor}'";
-        $resultado = self::consultarSQL($query);
-        return array_shift($resultado);
-    }
+   
 
     //     El método where realiza los siguientes pasos:
 
@@ -253,14 +251,50 @@ class ActiveRecord
     // 4. Convierte el resultado en un objeto usando un método específico (crearObjeto).
     // Este enfoque proporciona seguridad mediante consultas preparadas y es flexible para 
     // buscar registros basados en cualquier columna y valor.
+    // public static function whereFlexible($columna, $valor) {
+    //     $query = "SELECT * FROM " . static::$tabla . " WHERE ${columna} = ?";
+    //     $stmt = self::$db->prepare($query);
+    //     $stmt->bind_param('s', $valor);
+    //     $stmt->execute();
+    //     $resultado = $stmt->get_result();
+    
+    //     // Verificar si se encontraron resultados
+    //     if ($resultado->num_rows > 0) {
+    //         return static::crearObjeto($resultado->fetch_assoc());
+    //     } else {
+    //         return null; // Devolver null si no se encuentra ningún registro
+    //     }
+    // }
+
     public static function whereFlexible($columna, $valor) {
         $query = "SELECT * FROM " . static::$tabla . " WHERE ${columna} = ?";
         $stmt = self::$db->prepare($query);
         $stmt->bind_param('s', $valor);
         $stmt->execute();
         $resultado = $stmt->get_result();
-        return static::crearObjeto($resultado->fetch_assoc());
+    
+        // Verificar si se encontraron resultados
+        if ($resultado->num_rows > 0) {
+            // Depuración: Mostrar la consulta y los resultados
+            // echo "Query ejecutado: " . $query . "<br>";
+            // echo "Número de registros encontrados: " . $resultado->num_rows . "<br>";
+            return static::crearObjeto($resultado->fetch_assoc());
+        } else {
+            return null; // Devolver null si no se encuentra ningún registro
+        }
     }
+    
+    // Busqueda Where con Columna 
+    // public static function where($column, $value) {
+    //     // Escapamos el valor para evitar inyecciones SQL
+    //     $value = self::$db->escape_string($value);
+        
+    //     // Agregar la condición a la propiedad estática
+    //     self::$whereConditions[] = "$column = '$value'";
+        
+    //     return new static; // Permitir el encadenamiento de métodos
+    // }
+    
     
 
 
@@ -451,6 +485,17 @@ class ActiveRecord
         return $resultado;
     }
 
+    public static function findAll($condition = null)
+    {
+        $query = "SELECT * FROM " . static::$tabla;
+        if ($condition) {
+            $query .= " WHERE " . $condition;
+        }
+        $resultado = self::$db->query($query);
+        return $resultado->fetch_all(MYSQLI_ASSOC); // Ajusta según cómo manejes los resultados
+    }
+
+
     //Elimina pero solo desactiva dependiendo del estatus estatico de los campos a corde a la comlumna
     // En ActiveRecord.php
     public static function deshabilitar($id, $columna) {
@@ -519,11 +564,6 @@ class ActiveRecord
         return null; // Retornar null si no se encontró ningún registro
     }
 
-    // Método para obtener el primer registro
-    public static function first($query) {
-        $resultado = self::consultarSQL($query);
-        return array_shift($resultado);
-    }
 
 
     public static function findByPacienteId($pacienteId) {
@@ -566,6 +606,103 @@ class ActiveRecord
 
     public static function rollback() {
         self::$db->rollback();
+    }
+
+
+     // Busqueda Where con Columna 
+     public static function where($column, $value) {
+        // Escapamos el valor para evitar inyecciones SQL
+        $value = self::$db->escape_string($value);
+        
+        // Agregar la condición a la propiedad estática
+        self::$whereConditions[] = "$column = '$value'";
+        
+        return new static; // Permitir el encadenamiento de métodos
+    }
+    
+
+     // Búsqueda Where con Columna
+    public static function whereColumna($columna, $valor) {
+        self::$whereConditions[] = "${columna} = '${valor}'";
+    }
+
+    // Añadir condiciones OR
+    public static function orWhere($column, $value1, $value2 = null, $value3 = null) {
+        // Escapamos los valores para evitar inyecciones SQL
+        $value1 = self::$db->escape_string($value1);
+        $value2 = self::$db->escape_string($value2);
+        $value3 = self::$db->escape_string($value3);
+        
+        // Construir la condición OR
+        if ($value2 === null && $value3 === null) {
+            self::$orWhereConditions[] = "$column = '$value1'";
+        } elseif ($value3 === null) {
+            self::$orWhereConditions[] = "($column = '$value1' OR $column = '$value2')";
+        } else {
+            self::$orWhereConditions[] = "($column = '$value1' OR $column = '$value2' OR $column = '$value3')";
+        }
+        
+        return new static; // Permitir el encadenamiento de métodos
+    }
+    
+
+    // Buscar todos con condiciones WHERE y OR
+    public static function whereOr($campo1, $valor1, $campo2 = null, $valor2 = null) {
+        $query = "SELECT * FROM " . static::$tabla . " WHERE $campo1 = ?";
+    
+        if ($campo2 && $valor2) {
+            $query .= " OR $campo2 = ?";
+        }
+    
+        $stmt = self::$db->prepare($query);
+        
+        if ($campo2 && $valor2) {
+            $stmt->bind_param('ss', $valor1, $valor2);
+        } else {
+            $stmt->bind_param('s', $valor1);
+        }
+        
+        $stmt->execute();
+        return $stmt->get_result();
+    }
+    
+    
+
+    // Obtener el primer resultado
+    public static function first() {
+        $query = "SELECT * FROM " . static::$tabla . " LIMIT 1";
+        $resultado = self::consultarSQL($query);
+        return array_shift($resultado);
+    }
+    
+    // Método para obtener el primer registro con una consulta personalizada
+    public static function firstQuery($query) {
+        $resultado = self::consultarSQL($query);
+        return array_shift($resultado);
+    }
+    
+
+    public static function whereArreglo($array = []) {
+        $query = "SELECT * FROM " . static::$tabla . " WHERE ";
+        $conditions = [];
+        $params = [];
+        $tipos = '';
+    
+        foreach ($array as $key => $value) {
+            $conditions[] = "${key} = ?";
+            $params[] = $value;
+            $tipos .= 's'; // Asumiendo que todos los valores son strings. Ajusta según el tipo de datos.
+        }
+    
+        $query .= join(' AND ', $conditions);
+    
+        // Preparar la consulta
+        $stmt = self::$db->prepare($query);
+        $stmt->bind_param($tipos, ...$params);
+        $stmt->execute();
+        $resultado = $stmt->get_result();
+    
+        return $resultado->fetch_all(MYSQLI_ASSOC);
     }
     
 }
