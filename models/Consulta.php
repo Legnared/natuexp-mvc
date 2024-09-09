@@ -84,6 +84,23 @@ class Consulta extends ActiveRecord {
         return $resultado;
     }
 
+    public static function consultaPorPacientes(array $pacientes) {
+        if (empty($pacientes)) {
+            return [];
+        }
+    
+        // Obtener IDs de pacientes
+        $idsPacientes = array_map(fn($paciente) => (int) $paciente->id, $pacientes);
+    
+        // Construir la consulta con parámetros
+        $placeholders = implode(',', array_fill(0, count($idsPacientes), '?'));
+    
+        $query = "SELECT * FROM " . static::$tabla . " WHERE paciente_id IN ($placeholders)";
+    
+        // Ejecutar la consulta con los parámetros
+        return self::consultarSQL($query, $idsPacientes);
+    }
+
     // En los modelos
     public static function findByPacienteId($pacienteId) {
         $query = "SELECT * FROM " . static::$tabla . " WHERE paciente_id = ?";

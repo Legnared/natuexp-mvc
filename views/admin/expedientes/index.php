@@ -51,7 +51,7 @@
 
                         </td>
                         <td>
-                    
+
                             <!-- Mostrar la imagen del paciente -->
                             <div class="patient-image mt-3">
                                 <img src="<?php echo $_ENV['HOST'] . '/img/patients/' . $paciente->foto; ?>"
@@ -83,15 +83,15 @@
                                                     <i class="fa fa-solid fa-edit"></i> Editar
                                                 </a>
 
-                                                <?php if (is_admin()) : ?>
-                                            <div class="dropdown-divider"></div>
-                                            <form method="POST" action="/admin/expedientes/eliminar">
-                                                <input type="hidden" name="id" value="<?php echo $paciente->id; ?>">
-                                                <button class="dropdown-item btn btn-alt-danger" type="submit">
-                                                    <i class="fa fa-solid fa-user-times"></i> Eliminar
-                                                </button>
-                                            </form>
-                                            <?php endif ?>
+                                                <?php if (tiene_acceso([1, 2, 3], [4, 5, 6, 7, 8])) : ?>
+                                                <div class="dropdown-divider"></div>
+                                                <form method="POST" action="/admin/expedientes/eliminar">
+                                                    <input type="hidden" name="id" value="<?php echo $paciente->id; ?>">
+                                                    <button class="dropdown-item btn btn-alt-danger" type="submit">
+                                                        <i class="fa fa-solid fa-user-times"></i> Eliminar
+                                                    </button>
+                                                </form>
+                                                <?php endif ?>
 
                                             </div>
                                         </div>

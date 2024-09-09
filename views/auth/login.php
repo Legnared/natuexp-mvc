@@ -31,7 +31,7 @@
                         <?php
                             require_once __DIR__ . '/../templates/alertas.php';
                         ?>
-                        <form method="POST" action="/login">
+                        <form method="POST" action="/login" id="signin-form">
                             <div class="form-group row">
                                 <div class="col-12">
                                     <div class="form-material floating">
@@ -52,9 +52,12 @@
                             </div>
                             <div class="form-group">
                                 <!-- <input type="hidden" name="enviar" class="form-control" value="si"> -->
-                                <button type="submit" class="btn btn-sm btn-hero btn-outline-primary">
+                                <button type="submit" id="submit-button" name="action" class="btn btn-sm btn-hero btn-outline-primary">
                                     <i class="si si-login mr-10"></i> Iniciar Sesión
                                 </button>
+                                <div id="loading-spinner" class="d-none">
+                                        <i class="fa fa-spinner fa-spin"></i> Cargando...
+                                    </div>
                                 <div class="mt-30">
                                     <a class="link-effect text-muted mr-10 mb-5 d-inline-block" href="/crear">
                                         <i class="fa fa-plus-square-o mr-5"></i> ¿Aún no tienes una cuenta para médicos?
@@ -67,6 +70,7 @@
                                 </div>
                             </div>
                         </form>
+                        
 
                     </div>
                 </div>
@@ -74,3 +78,10 @@
         </div>
     </main>
 </div>
+<script>
+    document.getElementById('signin-form').addEventListener('submit', function(event) {
+        // Mostrar el spinner y ocultar el botón de envío
+        document.getElementById('loading-spinner').classList.remove('d-none');
+        document.getElementById('submit-button').classList.add('d-none');
+    });
+</script>

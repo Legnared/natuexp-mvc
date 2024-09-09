@@ -1,6 +1,7 @@
 <!-- Block Default Style -->
 <div class="block">
     <div class="container-fluid">
+
         <fieldset>
             <legend>Datos del Paciente</legend>
 
@@ -9,6 +10,33 @@
             </div>
 
             <div class="row">
+
+                <!-- Solo mostrar el select si el rol del usuario es 1 (Administrador) o 3 (Recepcionista) -->
+                <?php if ($_SESSION['rol_id'] == 1 || $_SESSION['rol_id'] == 3): ?>
+                <div class="col-md-6 mb-3">
+                    <div class="form-material">
+                        <select name="usuario_id" id="usuario_id" class="form-control">
+                            <option value="" disabled>Seleccionar Médico:</option>
+                            <?php foreach ($usuarios as $usuario): ?>
+                            <option value="<?= htmlspecialchars($usuario['id']); ?>"
+                                <?= $paciente->usuario_id == $usuario['id'] ? 'selected' : ''; ?>>
+                                <?= htmlspecialchars($usuario['nombre']); ?>
+                            </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <label for="usuario_id"><span class="text-danger">*</span> Médico</label>
+                    </div>
+                </div>
+                <?php endif; ?>
+
+
+
+
+
+
+
+
+
                 <!-- Nombre del Paciente -->
                 <div class="col-md-6 mb-3">
                     <div class="form-material">
@@ -141,63 +169,65 @@
 
                 <div class="row justify-content-center">
                     <?php
-        // Definir los antecedentes médicos posibles
-        $antecedentes = [
-            "diabetes" => "Diabetes",
-            "cancer" => "Cáncer",
-            "obesidad" => "Obesidad",
-            "infartos" => "Infartos",
-            "alergias" => "Alergias",
-            "depresion" => "Depresión",
-            "artritis" => "Artritis",
-            "estrenimiento" => "Estreñimiento",
-            "gastritis" => "Gastritis",
-            "comida_chatarra" => "Comida Chatarra",
-            "fumas" => "Fumas",
-            "bebes" => "Bebes",
-            "cirugias" => "Cirugías",
-            "embarazos" => "Embarazos",
-            "abortos" => "Abortos"
-        ];
+    // Definir los antecedentes médicos posibles
+    $antecedentesLabels = [
+        "diabetes" => "Diabetes",
+        "cancer" => "Cáncer",
+        "obesidad" => "Obesidad",
+        "infartos" => "Infartos",
+        "alergias" => "Alergias",
+        "depresion" => "Depresión",
+        "artritis" => "Artritis",
+        "estreñimiento" => "Estreñimiento",
+        "gastritis" => "Gastritis",
+        "comida_chatarra" => "Comida Chatarra",
+        "fumas" => "Fumas",
+        "bebes" => "Bebes",
+        "cirugias" => "Cirugías",
+        "embarazos" => "Embarazos",
+        "abortos" => "Abortos"
+    ];
 
-        // Verificar si la variable antecedentes tiene datos
-        if (!empty($antecedentes)) {
-            foreach ($antecedentes as $id => $label) { ?>
+    // Verificar si la variable antecedentes tiene datos
+    if (!empty($antecedentesLabels)) {
+        foreach ($antecedentesLabels as $id => $label) { ?>
                     <div class="col-md-3 col-6 mb-4 text-center">
                         <div class="form-check">
                             <input type="checkbox" class="form-check-input"
                                 id="<?php echo htmlspecialchars($id, ENT_QUOTES); ?>"
                                 name="<?php echo htmlspecialchars($id, ENT_QUOTES); ?>" value="1"
-                                <?php echo isset($_POST[$id]) && $_POST[$id] == 1 ? 'checked' : ''; ?>
+                                <?php echo !empty($antecedentes->{$id}) && $antecedentes->{$id} == 1 ? 'checked' : ''; ?>
                                 onclick="toggleField('<?php echo htmlspecialchars($id, ENT_QUOTES); ?>')">
                             <label class="form-check-label"
                                 for="<?php echo htmlspecialchars($id, ENT_QUOTES); ?>"><?php echo htmlspecialchars($label, ENT_QUOTES); ?></label>
                         </div>
                     </div>
                     <?php }
-        } else {
-            echo '<p>No se encontraron antecedentes médicos.</p>';
-        }
-        ?>
+    } else {
+        echo '<p>No se encontraron antecedentes médicos.</p>';
+    }
+    ?>
                 </div>
+
 
                 <!-- Campos adicionales -->
                 <?php foreach (['cirugias', 'embarazos', 'abortos'] as $field) { ?>
                 <div id="<?php echo $field; ?>_fields" class="row"
-                    style="display: <?php echo isset($_POST[$field]) && $_POST[$field] == 1 ? 'block' : 'none'; ?>;">
+                    style="display: <?php echo (isset($antecedentes->{$field}) && $antecedentes->{$field} == 1) || (isset($_POST[$field]) && $_POST[$field] == 1) ? 'block' : 'none'; ?>;">
+
                     <?php if ($field === 'cirugias') { ?>
                     <div class="col-md-12 mb-3">
                         <div class="form-material">
                             <input type="number" class="form-control" id="num_cirugias" name="num_cirugias"
                                 placeholder="Cantidad de Cirugías"
-                                value="<?php echo htmlspecialchars($_POST['num_cirugias'] ?? '', ENT_QUOTES); ?>">
+                                value="<?php echo htmlspecialchars($_POST['num_cirugias'] ?? $antecedentes->num_cirugias ?? '', ENT_QUOTES); ?>">
                             <label for="num_cirugias">Cantidad de Cirugías</label>
                         </div>
                     </div>
                     <div class="col-md-12 mb-3">
                         <div class="form-material">
                             <textarea class="form-control" id="desc_cirugias" name="desc_cirugias" rows="4"
-                                placeholder="Descripción de Cirugías"><?php echo htmlspecialchars($_POST['desc_cirugias'] ?? '', ENT_QUOTES); ?></textarea>
+                                placeholder="Descripción de Cirugías"><?php echo htmlspecialchars($_POST['desc_cirugias'] ?? $antecedentes->desc_cirugias ?? '', ENT_QUOTES); ?></textarea>
                             <label for="desc_cirugias">Descripción de Cirugías</label>
                         </div>
                     </div>
@@ -206,7 +236,7 @@
                         <div class="form-material">
                             <input type="number" class="form-control" id="num_embarazos" name="num_embarazos"
                                 placeholder="Cantidad de Embarazos"
-                                value="<?php echo htmlspecialchars($_POST['num_embarazos'] ?? '', ENT_QUOTES); ?>">
+                                value="<?php echo htmlspecialchars($_POST['num_embarazos'] ?? $antecedentes->num_embarazos ?? '', ENT_QUOTES); ?>">
                             <label for="num_embarazos">Cantidad de Embarazos</label>
                         </div>
                     </div>
@@ -215,13 +245,16 @@
                         <div class="form-material">
                             <input type="number" class="form-control" id="num_abortos" name="num_abortos"
                                 placeholder="Cantidad de Abortos"
-                                value="<?php echo htmlspecialchars($_POST['num_abortos'] ?? '', ENT_QUOTES); ?>">
+                                value="<?php echo htmlspecialchars($_POST['num_abortos'] ?? $antecedentes->num_abortos ?? '', ENT_QUOTES); ?>">
                             <label for="num_abortos">Cantidad de Abortos</label>
                         </div>
                     </div>
                     <?php } ?>
                 </div>
                 <?php } ?>
+
+
+
             </fieldset>
 
 
@@ -321,6 +354,7 @@
                     </div>
                 </div>
 
+
                 <!-- Mostrar archivos del expediente médico -->
                 <?php if (isset($paciente->expediente_file) && !empty($paciente->expediente_file)) { ?>
                 <div class="col-md-6 mb-3">
@@ -374,11 +408,11 @@
 
                 <div class="col-md-6 mb-3">
                     <div class="form-material">
-                        <input type="text" class="form-control" id="pais" name="pais"
-                            placeholder="País" value="<?php echo $direccion->pais ?? ''; ?>">
+                        <input type="text" class="form-control" id="pais" name="pais" placeholder="País"
+                            value="<?php echo $direccion->pais ?? ''; ?>">
                         <label for="pais">País</label>
                     </div>
-                </div> 
+                </div>
 
                 <div class="col-md-6 mb-3">
                     <div class="form-material">
@@ -497,7 +531,7 @@ function toggleField(checkboxId) {
 
 document.addEventListener('DOMContentLoaded', function() {
     var checkboxIds = [
-        'cirugias', 'embarazos', 'abortos'  // Solo los que tienen campos adicionales
+        'cirugias', 'embarazos', 'abortos' // Solo los que tienen campos adicionales
     ];
 
     checkboxIds.forEach(function(id) {
@@ -515,5 +549,4 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
-
 </script>

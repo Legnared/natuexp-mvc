@@ -47,4 +47,10 @@ class Roles extends ActiveRecord {
         $this->actualizado_at = date('Y-m-d H:i:s');
         return parent::guardar();
     }
+
+    public function usuarios() {
+        return $this->hasMany(Usuario::class, 'rol_id');
+    }
+    
+    
 }

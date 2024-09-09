@@ -106,12 +106,19 @@ $router->get('/admin/system/usuarios', [SystemController::class, 'gestionUsuario
 
 // Configuración de Usuarios
 $router->get('/admin/system/usuarios', [UsuariosController::class, 'index']);
+
 $router->get('/admin/system/usuarios/crear', [UsuariosController::class, 'crear']);
 $router->post('/admin/system/usuarios/crear', [UsuariosController::class, 'crear']);
+
 $router->get('/admin/system/usuarios/editar', [UsuariosController::class, 'editar']);
 $router->post('/admin/system/usuarios/editar', [UsuariosController::class, 'editar']);
+
+$router->get('/admin/system/usuarios/cambiar-password', [UsuariosController::class, 'cambiarPassword']);
+$router->post('/admin/system/usuarios/cambiar-password', [UsuariosController::class, 'cambiarPassword']);
+
 $router->post('/admin/system/usuarios/eliminar', [UsuariosController::class, 'eliminar']);
 $router->post('/admin/system/usuarios/activar', [UsuariosController::class, 'activar']);
+$router->post('/admin/system/usuarios/desactivar', [UsuariosController::class, 'desactivar']);
 
 
 

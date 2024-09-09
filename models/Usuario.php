@@ -5,7 +5,7 @@ namespace Model;
 class Usuario extends ActiveRecord {
 
     protected static $tabla = 'usuarios';
-    protected static $columnasDB = ['id', 'nombre', 'apellido', 'email', 'telefono', 'foto', 'password', 'confirmado', 'token', 'perfil', 'fecha_creacion', 'fecha_modificacion', 'estado', 'rol_id'];
+    protected static $columnasDB = ['id', 'nombre', 'apellido', 'email', 'telefono', 'foto', 'password', 'confirmado', 'token', 'perfil', 'fecha_creacion', 'fecha_modificacion', 'estatus', 'rol_id', 'direccion_id'];
 
     public $id;
     public $nombre;
@@ -21,9 +21,10 @@ class Usuario extends ActiveRecord {
     public $token;
     public $perfil;
     public $foto;
-    public $estado;
+    public $estatus;
     public $fecha_modificacion;
     public $rol_id;
+    public $direccion_id; // Añadido
 
     public function __construct($args = []) {
         $this->id = $args['id'] ?? null;
@@ -41,8 +42,9 @@ class Usuario extends ActiveRecord {
         $this->token = $args['token'] ?? '';
         $this->perfil = $args['perfil'] ?? 'usuario';
         $this->foto = $args['foto'] ?? '';
-        $this->estado = $args['estado'] ?? 1;
+        $this->estatus = $args['estatus'] ?? 1;
         $this->rol_id = $args['rol_id'] ?? null;
+        $this->direccion_id = isset($args['direccion_id']) ? (int) $args['direccion_id'] : null; // Inicialización como entero
     }
 
     // Método para sanitizar datos
@@ -67,6 +69,8 @@ class Usuario extends ActiveRecord {
 
     // Validación para cuentas nuevas
     public function validar_cuenta() {
+        $alertas = [];
+        
         if(!$this->nombre) {
             self::$alertas['error'][] = 'El Nombre es Obligatorio';
         }
@@ -79,17 +83,35 @@ class Usuario extends ActiveRecord {
         if(!$this->telefono) {
             self::$alertas['error'][] = 'El Teléfono es Obligatorio';
         }
-        if(!$this->password) {
-            self::$alertas['error'][] = 'El Password no puede ir vacío';
+         // Solo validar la contraseña si se ha proporcionado una nueva contraseña
+        if (!empty($this->password)) {
+            $alertas = array_merge($alertas, $this->validar_password());
         }
-        if(strlen($this->password) < 6) {
-            self::$alertas['error'][] = 'El password debe contener al menos 6 caracteres';
+            return self::$alertas;
         }
-        if($this->password !== $this->password2) {
-            self::$alertas['error'][] = 'Los passwords son diferentes';
+
+    public function validar_password() {
+        $alertas = [];
+        
+        // Validar que la contraseña no esté vacía
+        if (!$this->password) {
+            $alertas['error'][] = 'El Password no puede ir vacío';
         }
-        return self::$alertas;
+    
+        // Validar longitud de la contraseña
+        if (strlen($this->password) < 6) {
+            $alertas['error'][] = 'El password debe contener al menos 6 caracteres';
+        }
+    
+        // Validar que las contraseñas coincidan
+        if ($this->password !== $this->password2) {
+            $alertas['error'][] = 'Los passwords son diferentes';
+        }
+        
+        return $alertas;
     }
+    
+
 
     // Validar Email
     public function validarEmail() {
@@ -115,17 +137,25 @@ class Usuario extends ActiveRecord {
 
     // Validar nuevo password
     public function nuevo_password() : array {
-        if(!$this->password_actual) {
+        self::$alertas = []; // Limpia las alertas para evitar mensajes duplicados
+        
+        // Verifica si el campo password_actual está presente en el formulario
+        if (isset($this->password_actual) && empty($this->password_actual)) {
             self::$alertas['error'][] = 'El Password Actual no puede ir vacío';
         }
-        if(!$this->password_nuevo) {
+        
+        if (empty($this->password_nuevo)) {
             self::$alertas['error'][] = 'El Password Nuevo no puede ir vacío';
         }
-        if(strlen($this->password_nuevo) < 6) {
+        
+        if (strlen($this->password_nuevo) < 6) {
             self::$alertas['error'][] = 'El Password debe contener al menos 6 caracteres';
         }
+        
         return self::$alertas;
     }
+
+
 
     // Comprobar el password
     public function comprobar_password() : bool {
@@ -137,10 +167,35 @@ class Usuario extends ActiveRecord {
         $this->password = password_hash($this->password, PASSWORD_BCRYPT);
     }
 
+
+
+    // Cambiar la contraseña
+    public function resetPassword($nuevo_password) {
+        if (!$nuevo_password || strlen($nuevo_password) < 6) {
+            self::$alertas['error'][] = 'El Password debe contener al menos 6 caracteres';
+            return false;
+        }
+
+        $this->password = password_hash($nuevo_password, PASSWORD_BCRYPT);
+        $this->token = ''; // Opcional
+        $this->fecha_modificacion = date('Y-m-d H:i:s');
+
+        return $this->guardar();
+    }
+
+    
+    
+
+
+
     // Generar un Token
     public function crearToken() : void {
         $this->token = bin2hex(random_bytes(32));
     }
+
+    
+    
+    
 
     // Validar perfil
     public function validar_perfil() {
@@ -153,6 +208,11 @@ class Usuario extends ActiveRecord {
         return self::$alertas;
     }
 
+
+     // Relación con Direccion
+    public function direccion() {
+        return $this->belongsTO(Direccion::class, 'direccion_id');
+    }
 
     // Método para obtener las direcciones asociadas al usuario
     public function obtenerDirecciones() {
@@ -167,6 +227,9 @@ class Usuario extends ActiveRecord {
         return 'Sin rol';
     }
 
+    public function direcciones() {
+        return Direccion::findByUsuarioId($this->id);
+    }
     
 
     // Crear un nuevo usuario
@@ -251,7 +314,18 @@ class Usuario extends ActiveRecord {
     
     
     
+   public function sincronizar($args = []) {
+        foreach ($args as $key => $value) {
+            if (property_exists($this, $key) && !is_null($value)) {
+                $this->$key = $this->sanitize($value);
+            }
+        }
+    }
+    
 
+    public function rol() {
+        return $this->belongsTo(Roles::class, 'rol_id');
+    }
     
     
 }

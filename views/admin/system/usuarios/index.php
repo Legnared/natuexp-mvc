@@ -28,7 +28,7 @@
                         <td><?php echo htmlspecialchars($usuario->email); ?></td>
                         <td><?php echo htmlspecialchars($usuario->telefono); ?></td>
                         <td><?php echo htmlspecialchars($usuario->obtenerRol()); ?></td>
-                        <td><?php echo $usuario->estado ? 'Activado' : 'No Activado'; ?></td>
+                        <td><?php echo $usuario->estatus ? 'Activado' : 'No Activado'; ?></td>
                         <td class="d-none d-sm-table-cell">
                             <div class="center col-xl-6">
                                 <div class="push">
@@ -46,8 +46,10 @@
                                                 Acciones
                                             </button>
                                             <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
-                                                <?php if (is_admin()) : ?>
-                                                <form method="POST" action="/admin/system/usuarios/activar" id="activar-form-<?php echo $usuario->id; ?>">
+                                                <?php if (tiene_acceso([1, 2, 3], [4, 5, 6, 7, 8])) : ?>
+                                                <!-- Formulario para activar al usuario -->
+                                                <form method="POST" action="/admin/system/usuarios/activar"
+                                                    id="activar-form-<?php echo $usuario->id; ?>">
                                                     <input type="hidden" name="id" value="<?php echo $usuario->id; ?>">
                                                     <button class="dropdown-item btn btn-alt-success" type="submit">
                                                         <i class="fa fa-solid fa-user"></i> Activar Usuario
@@ -55,13 +57,28 @@
                                                 </form>
 
                                                 <div class="dropdown-divider"></div>
-                                                <form method="POST" action="/admin/system/usuarios/eliminar" id="eliminar-form-<?php echo $usuario->id; ?>">
+
+                                                <!-- Formulario para desactivar al usuario -->
+                                                <form method="POST" action="/admin/system/usuarios/desactivar"
+                                                    id="desactivar-form-<?php echo $usuario->id; ?>">
                                                     <input type="hidden" name="id" value="<?php echo $usuario->id; ?>">
-                                                    <button class="dropdown-item btn btn-alt-danger" type="submit">
-                                                        <i class="fa fa-solid fa-trash"></i> Eliminar
+                                                    <button class="dropdown-item btn btn-alt-warning" type="submit">
+                                                        <i class="fa fa-solid fa-user-slash"></i> Desactivar Usuario
                                                     </button>
                                                 </form>
-                                                <?php endif ?>
+
+                                                <div class="dropdown-divider"></div>
+
+                                                <!-- Formulario para eliminar al usuario -->
+                                                <form method="POST" action="/admin/system/usuarios/eliminar"
+                                                    id="eliminar-form-<?php echo $usuario->id; ?>">
+                                                    <input type="hidden" name="id" value="<?php echo $usuario->id; ?>">
+                                                    <button class="dropdown-item btn btn-alt-danger" type="submit">
+                                                        <i class="fa fa-solid fa-trash"></i> Eliminar Usuario
+                                                    </button>
+                                                </form>
+                                                <?php endif; ?>
+
                                             </div>
                                         </div>
                                     </div>
@@ -99,31 +116,69 @@
 
                     // Enviar la solicitud usando fetch
                     fetch('/admin/system/usuarios/activar', {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            new Noty({
-                                type: 'success',
-                                layout: 'topRight',
-                                text: data.success.join('<br>'),
-                                timeout: 3000
-                            }).show();
-                        }
-                        if (data.error) {
-                            new Noty({
-                                type: 'error',
-                                layout: 'topRight',
-                                text: data.error.join('<br>'),
-                                timeout: 3000
-                            }).show();
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                    });
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                new Noty({
+                                    type: 'success',
+                                    layout: 'topRight',
+                                    text: data.success.join('<br>'),
+                                    timeout: 3000
+                                }).show();
+                            }
+                            if (data.error) {
+                                new Noty({
+                                    type: 'error',
+                                    layout: 'topRight',
+                                    text: data.error.join('<br>'),
+                                    timeout: 3000
+                                }).show();
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                        });
+                });
+            });
+
+            // Manejar el formulario de desactivación
+            document.querySelectorAll('[id^="desactivar-form-"]').forEach(form => {
+                form.addEventListener('submit', function(event) {
+                    event.preventDefault();
+
+                    // Crear un objeto FormData para enviar los datos del formulario
+                    var formData = new FormData(this);
+
+                    // Enviar la solicitud usando fetch
+                    fetch('/admin/system/usuarios/desactivar', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                new Noty({
+                                    type: 'success',
+                                    layout: 'topRight',
+                                    text: data.success.join('<br>'),
+                                    timeout: 3000
+                                }).show();
+                            }
+                            if (data.error) {
+                                new Noty({
+                                    type: 'error',
+                                    layout: 'topRight',
+                                    text: data.error.join('<br>'),
+                                    timeout: 3000
+                                }).show();
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                        });
                 });
             });
 
@@ -137,33 +192,33 @@
 
                     // Enviar la solicitud usando fetch
                     fetch('/admin/system/usuarios/eliminar', {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            new Noty({
-                                type: 'success',
-                                layout: 'topRight',
-                                text: data.success.join('<br>'),
-                                timeout: 3000
-                            }).show();
-                            // Opcionalmente, puedes recargar la página para reflejar los cambios
-                            location.reload();
-                        }
-                        if (data.error) {
-                            new Noty({
-                                type: 'error',
-                                layout: 'topRight',
-                                text: data.error.join('<br>'),
-                                timeout: 3000
-                            }).show();
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                    });
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                new Noty({
+                                    type: 'success',
+                                    layout: 'topRight',
+                                    text: data.success.join('<br>'),
+                                    timeout: 3000
+                                }).show();
+                                // Opcionalmente, puedes recargar la página para reflejar los cambios
+                                location.reload();
+                            }
+                            if (data.error) {
+                                new Noty({
+                                    type: 'error',
+                                    layout: 'topRight',
+                                    text: data.error.join('<br>'),
+                                    timeout: 3000
+                                }).show();
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                        });
                 });
             });
             </script>
@@ -171,6 +226,7 @@
             <?php } else { ?>
             <p class="text-center">No Hay Usuarios Aún.</p>
             <?php } ?>
+
         </div>
     </div>
 </div>

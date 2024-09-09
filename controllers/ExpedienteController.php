@@ -3,6 +3,8 @@
 namespace Controllers;
 
 use Model\Pacient;
+use Model\Usuario;
+use Model\Roles;
 use Model\Consulta;
 use Model\Direccion;
 use Model\DatosConsulta;
@@ -14,9 +16,14 @@ use Intervention\Image\ImageManagerStatic as Image;
 
 class ExpedienteController
 {
+
     public static function index(Router $router) {
         session_start();
-        if (!is_admin()) {
+        // Verificar acceso con roles permitidos y excluidos
+        $roles_permitidos = [1, 2, 3]; // Por ejemplo, rol de administrador
+        $roles_excluidos = [4, 5, 6, 7, 8];  // Por ejemplo, rol excluido (usuario regular)
+
+        if (!tiene_acceso($roles_permitidos, $roles_excluidos)) {
             header('Location: /login');
             exit();
         }
@@ -47,14 +54,27 @@ class ExpedienteController
 
     public static function expediente(Router $router) {
         session_start();
-        if (!is_admin()) {
+    
+        // Verificar acceso con roles permitidos y excluidos
+        $roles_permitidos = [1, 2, 3]; // Por ejemplo, rol de administrador y rol 3 específico
+        $roles_excluidos = [4, 5, 6, 7, 8];  // Por ejemplo, rol excluido (usuario regular)
+    
+        if (!tiene_acceso($roles_permitidos, $roles_excluidos)) {
             header('Location: /login');
             exit();
         }
     
         $usuario_id = $_SESSION['id'];
+        $usuario_rol = $_SESSION['rol_id']; // Obtener el rol del usuario
     
-        $pacientes = Pacient::pacientesPorUsuario($usuario_id);
+        if ($usuario_rol === 1 || $usuario_rol === 3) {
+            // Si el usuario es un administrador o tiene rol 3, obtén todos los pacientes
+            $pacientes = Pacient::all();
+        } else {
+            // Si el usuario no es administrador ni rol 3, obtén solo los pacientes asociados al usuario
+            $pacientes = Pacient::pacientesPorUsuario($usuario_id);
+        }
+    
         $consultas = Consulta::consultasPorPacientes($pacientes);
     
         $router->render('admin/expedientes/index', [
@@ -65,30 +85,46 @@ class ExpedienteController
     }
     
     
+    
+
     public static function crear(Router $router)
     {
         session_start();
-        if (!is_admin()) {
+        // Verificar acceso con roles permitidos y excluidos
+        $roles_permitidos = [1, 2, 3]; // Administrador, rol adicional
+        $roles_excluidos = [4, 5, 6, 7, 8];  // Otros roles excluidos
+
+        if (!tiene_acceso($roles_permitidos, $roles_excluidos)) {
             header('Location: /login');
             exit();
         }
-    
+
         $alertas = [];
         $generos = Sexo::all('ASC');
-        $paciente = new Pacient(); 
-        $direccion = new Direccion(); 
-        $antecedentes = new AntecedentesMedicos(); 
-        $datosConsulta = new DatosConsulta(); 
-        $consultas = new Consulta(); 
-    
+        $paciente = new Pacient();
+        $direccion = new Direccion();
+        $antecedentes = new AntecedentesMedicos();
+        $datosConsulta = new DatosConsulta();
+        $consultas = new Consulta();
+
+         // Obtener usuarios según el rol actual
+        if ($_SESSION['rol_id'] == 1 || $_SESSION['rol_id'] == 3) {
+            // Roles 1 y 3 pueden ver todos los médicos y otros roles si es necesario
+            $usuarios = Usuario::whereIn('rol_id', [1, 2, 3]);
+        } elseif ($_SESSION['rol_id'] == 2) {
+            // Rol 2 (médico) solo puede ver a sí mismo
+            $usuarios = Usuario::where('id', $_SESSION['id']);
+        }
+
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_POST = array_map('htmlspecialchars', $_POST);
-            $_POST['usuario_id'] = $_SESSION['id'];
+            $_POST['usuario_id'] = in_array($_SESSION['rol_id'], [1, 3]) ? ($_POST['usuario_id'] ?? null) : $_SESSION['id']; // Rol 1 o 3 puede seleccionar; otros usan su propio ID
             $_POST['url_avance'] = md5(uniqid(rand(), true));
             $_POST['fecha_creacion'] = date('Y-m-d H:i:s');
             $_POST['estatus'] = 1;
             $_POST['rol_id'] = 5; // Asignar automáticamente el rol de Paciente
-    
+
             // Manejo de checkboxes
             $checkboxes = [
                 'diabetes', 'cancer', 'obesidad', 'infartos', 'alergias',
@@ -98,19 +134,37 @@ class ExpedienteController
             foreach ($checkboxes as $checkbox) {
                 $_POST[$checkbox] = isset($_POST[$checkbox]) ? 1 : 0;
             }
-    
+
             // Manejo de archivos
             $alertas = self::manejarArchivos($_FILES, $alertas);
+
+            // Validar paciente
             $paciente->sincronizar($_POST);
             $alertas = array_merge($alertas, $paciente->validar());
-    
+
+            // Validar Dirección
+            $direccion->sincronizar($_POST);
+            $alertas = array_merge($alertas, $direccion->validar());
+
+            // Validar antecedentes médicos
+            $antecedentes->sincronizar($_POST);
+            $alertas = array_merge($alertas, $antecedentes->validar());
+
+            // Validar datos de consulta
+            $datosConsulta->sincronizar($_POST);
+            $alertas = array_merge($alertas, $datosConsulta->validar());
+
+            // Validar consulta
+            $consultas->sincronizar($_POST);
+            $alertas = array_merge($alertas, $consultas->validar());
+
             if (empty($alertas)) {
                 try {
                     // Guardar paciente
                     if ($paciente->guardar()) {
                         // Obtener el id del paciente guardado
                         $pacienteId = $paciente->id;
-                        
+
                         // Guardar antecedentes médicos
                         $antecedentes = new AntecedentesMedicos([
                             'paciente_id' => $pacienteId,
@@ -135,23 +189,26 @@ class ExpedienteController
                             'num_abortos' => $_POST['num_abortos'] ?? null
                         ]);
                         $antecedentes->guardar();
-                        
+
                         // Guardar dirección
-                        if (isset($_POST['calle'])) {
+                        if (isset($_POST['pais']) && !empty($_POST['pais'])) {
                             $direccion = new Direccion([
-                                'usuario_id' => $pacienteId,
-                                'calle' => $_POST['calle'],
                                 'pais' => $_POST['pais'],
-                                'numero_exterior' => $_POST['numero_exterior'],
-                                'numero_interior' => $_POST['numero_interior'],
-                                'colonia' => $_POST['colonia'],
-                                'municipio' => $_POST['municipio'],
-                                'estado' => $_POST['estado'],
-                                'codigo_postal' => $_POST['codigo_postal']
+                                'calle' => $_POST['calle'],
+                                'numero_exterior' => $_POST['numero_exterior'] ?? '',
+                                'numero_interior' => $_POST['numero_interior'] ?? '',
+                                'colonia' => $_POST['colonia'] ?? '',
+                                'municipio' => $_POST['municipio'] ?? '',
+                                'estado' => $_POST['estado'] ?? '',
+                                'codigo_postal' => $_POST['codigo_postal'] ?? ''
                             ]);
                             $direccion->guardar();
+
+                            // Asignar la dirección al paciente
+                            $paciente->direccion_id = $direccion->id;
+                            $paciente->guardar();
                         }
-                        
+
                         // Guardar datos de consulta
                         if (isset($_POST['presion_arterial'])) {
                             $datosConsulta = new DatosConsulta([
@@ -164,7 +221,7 @@ class ExpedienteController
                             ]);
                             $datosConsulta->guardar();
                         }
-    
+
                         // Guardar consulta
                         if (isset($_POST['motivo_consulta'])) {
                             $consultas = new Consulta([
@@ -179,9 +236,9 @@ class ExpedienteController
                             ]);
                             $consultas->guardar();
                         }
-    
+
                         $_SESSION['redirect'] = '/admin/expedientes'; 
-                        $alertas['success'][] = 'Paciente creado correctamente!, espere 5 segundos serás redireccionado al Listado de Pacientes';
+                        $alertas['success'][] = 'Paciente creado correctamente! Espera 5 segundos para ser redireccionado al Listado de Pacientes';
                     } else {
                         $alertas['error'][] = 'El Paciente no se registró correctamente!';
                     }
@@ -190,119 +247,187 @@ class ExpedienteController
                 }
             }
         }
-    
+
         $router->render('admin/expedientes/crear', [
             'alertas' => $alertas,
-            'titulo' => 'Crear Paciente',
+            'titulo' => 'Nuevo Paciente',
             'paciente' => $paciente,
             'generos' => $generos,
             'direccion' => $direccion,
             'antecedentes' => $antecedentes,
             'datosConsulta' => $datosConsulta,
-            'consultas' => $consultas
+            'consultas' => $consultas,
+            'usuarios' => $usuarios,
+            'esMedico' => $_SESSION['rol_id'] == 2
         ], 'admin-layout');
     }
-    
-    
 
     
     public static function editar(Router $router)
     {
         session_start();
-        if (!is_admin()) {
+        // Verificar acceso con roles permitidos y excluidos
+        $roles_permitidos = [1, 2, 3]; // Administrador, rol adicional
+        $roles_excluidos = [4, 5, 6, 7, 8];  // Otros roles excluidos
+
+        if (!tiene_acceso($roles_permitidos, $roles_excluidos)) {
             header('Location: /login');
             exit();
         }
-    
+
         $alertas = [];
         $generos = Sexo::all('ASC');
-        $id = $_GET['id'] ?? null;
-    
-        if (!$id) {
-            header('Location: /admin/pacientes');
-            exit();
-        }
-    
-        $paciente = Pacient::findId($id);
-    
-        if (!$paciente) {
-            header('Location: /admin/pacientes');
-            exit();
-        }
-    
-        $direccion = Direccion::findByPacienteId($id) ?: new Direccion();
-       
-        $datosConsulta = DatosConsulta::findByPacienteId($id) ?: new DatosConsulta();
-        $consultas = Consulta::findByPacienteId($id) ?: new Consulta();
-        $antecedentes = AntecedentesMedicos::findByPacienteId($id) ?: new AntecedentesMedicos();
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-           // Sanitizar valores en $_POST
-            $_POST = array_map(function($value) {
-                return is_string($value) ? htmlspecialchars($value, ENT_QUOTES, 'UTF-8') : $value;
-            }, $_POST);
+        $paciente = Pacient::find($_GET['id']);
+        $direccion = Direccion::find($paciente->direccion_id ?? null);
+        $antecedentes = AntecedentesMedicos::find($paciente->id);
+        $datosConsulta = DatosConsulta::find($paciente->id);
+        $consultas = Consulta::find($paciente->id);
 
-            // Convertir checkboxes a 1 o 0
+      
+          // Obtener usuarios según el rol actual
+          if ($_SESSION['rol_id'] == 1 || $_SESSION['rol_id'] == 3) {
+            // Roles 1 y 3 pueden ver todos los médicos y otros roles si es necesario
+            $usuarios = Usuario::whereIn('rol_id', [1, 2, 3]);
+        } elseif ($_SESSION['rol_id'] == 2) {
+            // Rol 2 (médico) solo puede ver a sí mismo
+            $usuarios = Usuario::where('id', $_SESSION['id']);
+        }
+
+        if (!$paciente) {
+            header('Location: /admin/expedientes');
+            exit();
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $_POST = array_map('htmlspecialchars', $_POST);
+              // Ajustar el valor de usuario_id basado en el rol del usuario
+            $_POST['usuario_id'] = in_array($_SESSION['rol_id'], [1, 3]) ? ($_POST['usuario_id'] ?? $paciente->usuario_id) : $_SESSION['id']; // Rol 1 o 3 puede seleccionar; otros usan su propio ID
+        // Rol 1 o 3 puede seleccionar; otros usan su propio ID
+            $_POST['url_avance'] = md5(uniqid(rand(), true));
+            $_POST['fecha_creacion'] = date('Y-m-d H:i:s');
+            $_POST['estatus'] = 1;
+            $_POST['rol_id'] = 5; // Asignar automáticamente el rol de Paciente
+
+            // Manejo de checkboxes
             $checkboxes = [
                 'diabetes', 'cancer', 'obesidad', 'infartos', 'alergias',
-                'depresion', 'artritis', 'estrenimiento', 'gastritis',
+                'depresion', 'artritis', 'estreñimiento', 'gastritis',
                 'comida_chatarra', 'fumas', 'bebes', 'cirugias', 'embarazos', 'abortos'
             ];
-
-    
             foreach ($checkboxes as $checkbox) {
                 $_POST[$checkbox] = isset($_POST[$checkbox]) ? 1 : 0;
             }
-    
-            // Convertir campos adicionales a tipos adecuados
-            $_POST['num_cirugias'] = isset($_POST['num_cirugias']) ? (int) $_POST['num_cirugias'] : null;
-            $_POST['desc_cirugias'] = isset($_POST['desc_cirugias']) ? htmlspecialchars($_POST['desc_cirugias'], ENT_QUOTES, 'UTF-8') : '';
-            $_POST['num_embarazos'] = isset($_POST['num_embarazos']) ? (int) $_POST['num_embarazos'] : null;
-            $_POST['num_abortos'] = isset($_POST['num_abortos']) ? (int) $_POST['num_abortos'] : null;
-    
-            //debuguear($_POST);
+
             // Manejo de archivos
             $alertas = self::manejarArchivos($_FILES, $alertas);
-    
+
+            // Validar paciente
             $paciente->sincronizar($_POST);
             $alertas = array_merge($alertas, $paciente->validar());
-    
+
+            // Validar Dirección
+            $direccion->sincronizar($_POST);
+            $alertas = array_merge($alertas, $direccion->validar());
+
+            // Validar antecedentes médicos
+            $antecedentes->sincronizar($_POST);
+            $alertas = array_merge($alertas, $antecedentes->validar());
+
+            // Validar datos de consulta
+            $datosConsulta->sincronizar($_POST);
+            $alertas = array_merge($alertas, $datosConsulta->validar());
+
+            // Validar consulta
+            $consultas->sincronizar($_POST);
+            $alertas = array_merge($alertas, $consultas->validar());
+
             if (empty($alertas)) {
                 try {
-                    $resultado = $paciente->guardar();
-    
-                    if ($resultado) {
-                        // Sincronizar y guardar antecedentes médicos
-                        $antecedentes->sincronizar($_POST);
-                       
+                    // Actualizar paciente
+                    if ($paciente->guardar()) {
+                        // Actualizar antecedentes médicos
+                        $antecedentes = new AntecedentesMedicos([
+                            'paciente_id' => $paciente->id,
+                            'diabetes' => $_POST['diabetes'],
+                            'cancer' => $_POST['cancer'],
+                            'obesidad' => $_POST['obesidad'],
+                            'infartos' => $_POST['infartos'],
+                            'alergias' => $_POST['alergias'],
+                            'depresion' => $_POST['depresion'],
+                            'artritis' => $_POST['artritis'],
+                            'estreñimiento' => $_POST['estreñimiento'],
+                            'gastritis' => $_POST['gastritis'],
+                            'comida_chatarra' => $_POST['comida_chatarra'],
+                            'fumas' => $_POST['fumas'],
+                            'bebes' => $_POST['bebes'],
+                            'cirugias' => $_POST['cirugias'],
+                            'embarazos' => $_POST['embarazos'],
+                            'abortos' => $_POST['abortos'],
+                            'num_cirugias' => $_POST['num_cirugias'] ?? null,
+                            'desc_cirugias' => $_POST['desc_cirugias'] ?? '',
+                            'num_embarazos' => $_POST['num_embarazos'] ?? null,
+                            'num_abortos' => $_POST['num_abortos'] ?? null
+                        ]);
                         $antecedentes->guardar();
-                        
-                        
-                        if (isset($_POST['calle'])) {
-                            $direccion->sincronizar($_POST);
+
+                        // Actualizar dirección
+                        if (isset($_POST['pais']) && !empty($_POST['pais'])) {
+                            $direccion = new Direccion([
+                                'pais' => $_POST['pais'],
+                                'calle' => $_POST['calle'],
+                                'numero_exterior' => $_POST['numero_exterior'] ?? '',
+                                'numero_interior' => $_POST['numero_interior'] ?? '',
+                                'colonia' => $_POST['colonia'] ?? '',
+                                'municipio' => $_POST['municipio'] ?? '',
+                                'estado' => $_POST['estado'] ?? '',
+                                'codigo_postal' => $_POST['codigo_postal'] ?? ''
+                            ]);
                             $direccion->guardar();
+
+                            // Asignar la dirección al paciente
+                            $paciente->direccion_id = $direccion->id;
+                            $paciente->guardar();
                         }
-    
+
+                        // Actualizar datos de consulta
                         if (isset($_POST['presion_arterial'])) {
-                            $datosConsulta->sincronizar($_POST);
+                            $datosConsulta = new DatosConsulta([
+                                'paciente_id' => $paciente->id,
+                                'presion_arterial' => $_POST['presion_arterial'],
+                                'nivel_azucar' => $_POST['nivel_azucar'],
+                                'peso' => $_POST['peso'],
+                                'estatura' => $_POST['estatura'],
+                                'temperatura' => $_POST['temperatura']
+                            ]);
                             $datosConsulta->guardar();
                         }
-    
+
+                        // Actualizar consulta
                         if (isset($_POST['motivo_consulta'])) {
-                            $consultas->sincronizar($_POST);
+                            $consultas = new Consulta([
+                                'paciente_id' => $paciente->id,
+                                'motivo_consulta' => $_POST['motivo_consulta'],
+                                'tratamiento_sugerido' => $_POST['tratamiento_sugerido'] ?? '',
+                                'tiempo_tratamiento_clinico' => $_POST['tiempo_tratamiento_clinico'] ?? '',
+                                'diagnostico' => $_POST['diagnostico'] ?? '',
+                                'observaciones' => $_POST['observaciones'] ?? '',
+                                'tiempo_tratamiento_sugerido' => $_POST['tiempo_tratamiento_sugerido'] ?? '',
+                                'dosis_tratamiento' => $_POST['dosis_tratamiento'] ?? ''
+                            ]);
                             $consultas->guardar();
                         }
-    
+
                         $_SESSION['redirect'] = '/admin/expedientes'; 
-                        $alertas['success'][] = 'Paciente actualizado correctamente, espera 5 segundos para ser redireccionado al Listado de Pacientes';
+                        $alertas['success'][] = 'Paciente editado correctamente! Espera 5 segundos para ser redireccionado al Listado de Pacientes';
                     } else {
                         $alertas['error'][] = 'El Paciente no se actualizó correctamente!';
                     }
                 } catch (\Exception $e) {
-                    $alertas['error'][] = 'Error al guardar el paciente: ' . $e->getMessage();
+                    $alertas['error'][] = 'Error al actualizar el paciente: ' . $e->getMessage();
                 }
             }
         }
-    
+
         $router->render('admin/expedientes/editar', [
             'alertas' => $alertas,
             'titulo' => 'Editar Paciente',
@@ -311,11 +436,14 @@ class ExpedienteController
             'direccion' => $direccion,
             'antecedentes' => $antecedentes,
             'datosConsulta' => $datosConsulta,
-            'consultas' => $consultas
+            'consultas' => $consultas,
+            'usuarios' => $usuarios,
+            'esMedico' => $_SESSION['rol_id'] == 2
         ], 'admin-layout');
     }
-    
-    
+
+
+
 
 
     private static function manejarArchivos($files, $alertas) {
@@ -390,11 +518,12 @@ class ExpedienteController
     public static function eliminar(Router $router)
     {
         session_start();
-        is_admin(); // Verifica que el usuario tenga permisos de administrador
+        // Verificar acceso con roles permitidos y excluidos
+        $roles_permitidos = [1, 2, 3]; // Por ejemplo, rol de administrador
+        $roles_excluidos = [4, 5, 6, 7, 8];  // Por ejemplo, rol excluido (usuario regular)
 
-        // Asegúrate de que el usuario esté autenticado
-        if (!is_admin()) {
-            header('Location: /admin/dashboard/index');
+        if (!tiene_acceso($roles_permitidos, $roles_excluidos)) {
+            header('Location: /login');
             exit();
         }
 
@@ -435,10 +564,11 @@ class ExpedienteController
     public static function verExpediente(Router $router)
     {
         session_start();
-        id_admin();
-    
-        // Verificar si el usuario tiene permisos de administrador
-        if (!is_admin()) {
+        // Verificar acceso con roles permitidos y excluidos
+        $roles_permitidos = [1, 2, 3]; // Por ejemplo, rol de administrador
+        $roles_excluidos = [4, 5, 6, 7, 8];  // Por ejemplo, rol excluido (usuario regular)
+
+        if (!tiene_acceso($roles_permitidos, $roles_excluidos)) {
             header('Location: /login');
             exit();
         }
@@ -481,11 +611,13 @@ class ExpedienteController
 
     public static function cita_programada(Router $router) {
         session_start();
-        is_admin();
-        // Verificar si el usuario tiene permisos de administrador
-        if (!is_admin()) {
-        header('Location: /admin/dashboard/index');
-        exit();
+        // Verificar acceso con roles permitidos y excluidos
+        $roles_permitidos = [1, 2, 3]; // Por ejemplo, rol de administrador
+        $roles_excluidos = [4, 5, 6, 7, 8];  // Por ejemplo, rol excluido (usuario regular)
+
+        if (!tiene_acceso($roles_permitidos, $roles_excluidos)) {
+            header('Location: /login');
+            exit();
         }
     
         // Obtener todas las citas programadas

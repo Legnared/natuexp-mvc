@@ -12,8 +12,12 @@ class SystemController
     public static function perfil(Router $router)
     {
         session_start();
-        if (!is_admin()) {
-            header('Location: /admin/dashboard/index');
+        // Verificar acceso con roles permitidos y excluidos
+        $roles_permitidos = [1, 2, 3]; // Por ejemplo, rol de administrador
+        $roles_excluidos = [4, 5, 6, 7, 8];  // Por ejemplo, rol excluido (usuario regular)
+
+        if (!tiene_acceso($roles_permitidos, $roles_excluidos)) {
+            header('Location: /login');
             exit();
         }
         $alertas = [];
@@ -52,8 +56,12 @@ class SystemController
 
     public static function cambiarPassword(Router $router) {
         session_start();
-        if (!is_admin()) {
-            header('Location: /admin/dashboard/index');
+        // Verificar acceso con roles permitidos y excluidos
+        $roles_permitidos = [1, 2, 3]; // Por ejemplo, rol de administrador
+        $roles_excluidos = [4, 5, 6, 7, 8];  // Por ejemplo, rol excluido (usuario regular)
+
+        if (!tiene_acceso($roles_permitidos, $roles_excluidos)) {
+            header('Location: /login');
             exit();
         }
         $alertas = [];
@@ -95,8 +103,12 @@ class SystemController
     public static function cambiarFoto(Router $router)
     {
         session_start();
-        if (!is_admin()) {
-            header('Location: /admin/dashboard/index');
+        // Verificar acceso con roles permitidos y excluidos
+        $roles_permitidos = [1, 2, 3]; // Por ejemplo, rol de administrador
+        $roles_excluidos = [4, 5, 6, 7, 8];  // Por ejemplo, rol excluido (usuario regular)
+
+        if (!tiene_acceso($roles_permitidos, $roles_excluidos)) {
+            header('Location: /login');
             exit();
         }
         $alertas = [];
@@ -106,7 +118,7 @@ class SystemController
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $usuario->sincronizar($_POST);
             if (!empty($_FILES['foto']['tmp_name'])) {
-                $carpeta_imagenes = '../public/img/photosperfil';
+                $carpeta_imagenes = '../public/img/users/';
                 if (!is_dir($carpeta_imagenes)) {
                     mkdir($carpeta_imagenes, 0777, true);
                 }
@@ -147,8 +159,12 @@ class SystemController
     public static function configuracion(Router $router)
     {
         session_start();
-        if (!is_admin()) {
-            header('Location: /admin/dashboard/index');
+        // Verificar acceso con roles permitidos y excluidos
+        $roles_permitidos = [1, 2, 3]; // Por ejemplo, rol de administrador
+        $roles_excluidos = [4, 5, 6, 7, 8];  // Por ejemplo, rol excluido (usuario regular)
+
+        if (!tiene_acceso($roles_permitidos, $roles_excluidos)) {
+            header('Location: /login');
             exit();
         }
         // Aquí iría la lógica para manejar la configuración del sistema
@@ -160,8 +176,12 @@ class SystemController
     public static function gestionUsuarios(Router $router)
     {
         session_start();
-        if (!is_admin()) {
-            header('Location: /admin/dashboard/index');
+        // Verificar acceso con roles permitidos y excluidos
+        $roles_permitidos = [1, 2, 3]; // Por ejemplo, rol de administrador
+        $roles_excluidos = [4, 5, 6, 7, 8];  // Por ejemplo, rol excluido (usuario regular)
+
+        if (!tiene_acceso($roles_permitidos, $roles_excluidos)) {
+            header('Location: /login');
             exit();
         }
         // Aquí iría la lógica para manejar la gestión de usuarios
@@ -174,8 +194,12 @@ class SystemController
     public static function logs(Router $router)
     {
         session_start();
-        if (!is_admin()) {
-            header('Location: /admin/dashboard/index');
+        // Verificar acceso con roles permitidos y excluidos
+        $roles_permitidos = [1, 2, 3]; // Por ejemplo, rol de administrador
+        $roles_excluidos = [4, 5, 6, 7, 8];  // Por ejemplo, rol excluido (usuario regular)
+
+        if (!tiene_acceso($roles_permitidos, $roles_excluidos)) {
+            header('Location: /login');
             exit();
         }
         // Aquí iría la lógica para manejar los logs del sistema
@@ -187,8 +211,12 @@ class SystemController
     public static function respaldo(Router $router)
     {
         session_start();
-        if (!is_admin()) {
-            header('Location: /admin/dashboard/index');
+        // Verificar acceso con roles permitidos y excluidos
+        $roles_permitidos = [1, 2, 3]; // Por ejemplo, rol de administrador
+        $roles_excluidos = [4, 5, 6, 7, 8];  // Por ejemplo, rol excluido (usuario regular)
+
+        if (!tiene_acceso($roles_permitidos, $roles_excluidos)) {
+            header('Location: /login');
             exit();
         }
         // Aquí iría la lógica para manejar el respaldo de datos
@@ -200,8 +228,12 @@ class SystemController
     public static function notificaciones(Router $router)
     {
         session_start();
-        if (!is_admin()) {
-            header('Location: /admin/dashboard/index');
+        // Verificar acceso con roles permitidos y excluidos
+        $roles_permitidos = [1, 2, 3]; // Por ejemplo, rol de administrador
+        $roles_excluidos = [4, 5, 6, 7, 8];  // Por ejemplo, rol excluido (usuario regular)
+
+        if (!tiene_acceso($roles_permitidos, $roles_excluidos)) {
+            header('Location: /login');
             exit();
         }
         // Aquí iría la lógica para manejar las notificaciones del sistema

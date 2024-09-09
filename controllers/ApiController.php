@@ -5,6 +5,7 @@ namespace Controllers;
 use MVC\Router;
 
 class ApiController {
+    
     public static function getDatosCodigoPostal() {
         $codigoPostal = $_GET['codigo_postal'] ?? '';
         $token = 'b487c76a-29db-4a5d-aee8-75a8519f6add';

@@ -17,7 +17,8 @@
                     <?php include_once __DIR__ . '/formulario.php'; ?>
 
                     <div class="form-group">
-                        <button type="submit" name="save" id="btneditarPaciente" class="btn btn-danger mr-5 mb-5"> <i class="fa fa-edit mr-5"></i>Actualizar Paciente</button>
+                        <button type="submit" name="save" id="btneditarPaciente" class="btn btn-danger mr-5 mb-5"> <i
+                                class="fa fa-edit mr-5"></i>Actualizar Paciente</button>
                     </div>
                 </form>
             </div>
@@ -27,9 +28,9 @@
 
 <?php if (isset($_SESSION['redirect'])): ?>
 <script>
-    setTimeout(function() {
-        window.location.href = "<?php echo $_SESSION['redirect']; ?>";
-    }, 5000); // Redirige después de 5 segundos
+setTimeout(function() {
+    window.location.href = "<?php echo $_SESSION['redirect']; ?>";
+}, 5000); // Redirige después de 5 segundos
 </script>
 <?php unset($_SESSION['redirect']); // Elimina la variable de sesión después de usarla ?>
 <?php endif; ?>

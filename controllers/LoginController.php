@@ -37,7 +37,12 @@ class LoginController
                         $_SESSION['login'] = true;
 
                         // Redireccionar según el rol
-                        $redirectUrl = $usuario->rol_id == 1 ? '/admin/dashboard' : '/user/dashboard';
+                        if ($usuario->rol_id == 1 || $usuario->rol_id == 2 || $usuario->rol_id == 3) {
+                            $redirectUrl = '/admin/dashboard';
+                        } else {
+                            $redirectUrl = '/user/dashboard';
+                        }
+
                         header('Location: ' . $redirectUrl);
                         exit();
                     } else {
@@ -72,17 +77,23 @@ class LoginController
             $existeUsuario = Usuario::whereFlexible('email', $usuario->email);
             if ($existeUsuario) {
                 Usuario::setAlerta('danger', 'El Usuario ya está registrado');
-                $alertas = Usuario::getAlertas();
+                $alertas = array_merge($alertas, Usuario::getAlertas());
             }
-            
-            // Validar y guardar la dirección si se proporciona
-            if (!empty($_POST['calle'])) {
-                $direccion->sincronizar($_POST);
-                $alertas = array_merge($alertas, $direccion->validar());
-                
-                if (empty($alertas)) {
-                    $direccion->guardar();
-                    $usuario->direccion_id = $direccion->id;
+    
+            // Asignar rol y estatus del usuario
+            $usuario->rol_id = $_POST['rol_id'] ?? 1;
+            $usuario->estatus = $_POST['estatus'] ?? 1;
+    
+            // Verifica si se ha proporcionado información para la dirección
+            if (!empty($_POST['pais'])) {
+                $direccion->sincronizar($_POST);  // Sincroniza los datos del formulario con el modelo
+                $alertasDireccion = $direccion->validar();  // Valida los datos de la dirección
+    
+                if (empty($alertasDireccion)) {
+                    // No guardes la dirección aún
+                    $direccion->usuario_id = null; // Temporalmente sin asignar usuario_id
+                } else {
+                    $alertas = array_merge($alertas, $alertasDireccion);  // Agrega alertas de validación
                 }
             }
             
@@ -91,11 +102,7 @@ class LoginController
                 self::renderView($router, $usuario, $direccion, $alertas);
                 return;
             }
-            
-            // Asignar rol y estado del usuario
-            $usuario->rol_id = $_POST['rol_id'] ?? 1;
-            $usuario->estado = $_POST['estado'] ?? 1;
-            
+    
             // Continuar con la creación del usuario
             $usuario->hashPassword();
             unset($usuario->password2);
@@ -104,6 +111,21 @@ class LoginController
             
             try {
                 if ($usuario->guardar()) {
+                    // Ahora que el usuario tiene un ID válido, guarda la dirección
+                    if (!empty($_POST['pais'])) {
+                        $direccion->usuario_id = $usuario->id; // Asocia la dirección con el usuario guardado
+                        if ($direccion->guardar()) {
+                            // Dirección guardada exitosamente
+                            // Se puede actualizar el campo dirección_id del usuario si es necesario
+                            $usuario->direccion_id = $direccion->id;
+                            if (!$usuario->guardar()) {
+                                throw new \Exception('Error al actualizar el usuario con el ID de dirección.');
+                            }
+                        } else {
+                            $alertas['danger'][] = "Error al guardar la dirección en la base de datos: " . implode(", ", $direccion->getError());
+                        }
+                    }
+    
                     $email = new Email($usuario->email, $usuario->nombre, $usuario->token, $usuario->fecha_creacion);
                     $email->enviarConfirmacion();
                     header('Location: /mensaje');
@@ -113,13 +135,18 @@ class LoginController
                 }
             } catch (\Exception $e) {
                 error_log('Error al guardar el usuario: ' . $e->getMessage());
-                die('Error crítico al guardar el usuario.');
+                $alertas['danger'][] = 'Error crítico al guardar el usuario: ' . $e->getMessage();
+                self::renderView($router, $usuario, $direccion, $alertas);
             }
         }
         
         // Mostrar la vista de creación de cuenta
         self::renderView($router, $usuario, $direccion, $alertas);
     }
+    
+    
+    
+    
     
     private static function renderView(Router $router, Usuario $usuario, Direccion $direccion, array $alertas) {
         $data = [
@@ -242,7 +269,7 @@ class LoginController
     public static function confirmar(Router $router)
     {
         $alertas = [];
-        $token = s($_GET['token']);
+        $token = ($_GET['token']);
         
         if (!$token) {
             header('Location: /');
@@ -261,7 +288,7 @@ class LoginController
         } else {
             // Confirmar la cuenta
             $usuario->confirmado = 1;
-            $usuario->estado = 1;
+            $usuario->estatus = 1;
             $usuario->token = ''; // Limpiar el token después de la confirmación
             unset($usuario->password2);
     
@@ -312,7 +339,7 @@ class LoginController
             session_unset(); // Destruir variables de sesión
             session_destroy(); // Destruir sesión
             $_SESSION = [];
-            header('Location: /');
+            header('Location: /login');
             exit();
         }
     }

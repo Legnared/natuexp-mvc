@@ -2,7 +2,7 @@
 
 namespace Controllers;
 
-use Model\Paciente;
+use Model\Pacient;
 use Model\Cita; 
 use Model\CitaMedica;
 use Model\Sexo;
@@ -12,44 +12,64 @@ use Intervention\Image\ImageManagerStatic as Image;
 
 class DashboardController
 {
-    public static function index(Router $router)
-    {
+
+    public static function index(Router $router) {
         session_start();
-        // Verificar si el usuario tiene permisos de administrador
-        if (!is_admin()) {
+        
+        // Verificar acceso con roles permitidos y excluidos
+        $roles_permitidos = [1, 2, 3]; // Administrador y roles con acceso a todos los pacientes
+        $roles_excluidos = [4, 5, 6, 7, 8]; // Roles sin acceso
+        
+        if (!tiene_acceso($roles_permitidos, $roles_excluidos)) {
             header('Location: /login');
             exit();
         }
-
+        
         $usuario_id = $_SESSION['id'];
+        $rol_id = $_SESSION['rol_id']; // Asumiendo que el rol está guardado en la sesión
         $alertas = [];
-
-        // Obtener el número total de citas del usuario
-        $totalCitas = Cita::countByColumn('citas', 'paciente_id', $usuario_id);
-
-        // Obtener el número total de pacientes
-        $pacientes = Paciente::pacientesPorUsuario($usuario_id);
-        $totalPacientes = count($pacientes);
-
-        // Obtener el número de citas por semana
+        
+        // Verificar si el usuario tiene rol de administrador o rol privilegiado (rol_id 1 o 3)
+        if ($rol_id == 1 || $rol_id == 3) {
+            // Si es administrador o rol privilegiado, obtener todos los pacientes
+            $pacientes = Pacient::all(); // Método que trae todos los pacientes
+        } else {
+            // Si no es administrador, obtener solo los pacientes asociados al médico (usuario actual)
+            $pacientes = Pacient::pacientesPorUsuario($usuario_id);
+        }
+        
+        // Verificar que $pacientes no sea nulo y que sea un array o colección
+        $totalPacientes = is_array($pacientes) ? count($pacientes) : ($pacientes ? $pacientes->count() : 0);
+        
+        // Obtener consultas relacionadas con los pacientes
+        $consultas = Consulta::consultasPorPacientes($pacientes);
+        
+        // Total de citas por paciente
+        $totalCitas = $rol_id == 1 || $rol_id == 3 ? Cita::all() : Cita::countByColumn('citas', 'paciente_id', $usuario_id);
+        
+        // Citas por semana
         $citasPorSemana = Cita::citasPorSemana($usuario_id);
-
+        
         $router->render('admin/dashboard/index', [
             'titulo' => 'Panel de Administración',
             'subtitulo' => 'Revisión Médica',
             'pacientes' => $pacientes,
+            'consultas' => $consultas,
             'totalPacientes' => $totalPacientes,
             'totalCitas' => $totalCitas,
             'citasPorSemana' => $citasPorSemana
         ], 'admin-layout');
     }
-
+    
 
     public static function expediente(Router $router)
     {
         session_start();
-        // Verificar si el usuario tiene permisos de administrador
-        if (!is_admin()) {
+        // Verificar acceso con roles permitidos y excluidos
+        $roles_permitidos = [1, 2, 3, 8]; // Por ejemplo, rol de administrador
+        $roles_excluidos = [4, 5, 6, 7];  // Por ejemplo, rol excluido (usuario regular)
+
+        if (!tiene_acceso($roles_permitidos, $roles_excluidos)) {
             header('Location: /login');
             exit();
         }
@@ -68,8 +88,11 @@ class DashboardController
 
     public static function crear(Router $router) {
         session_start();
-        // Verificar si el usuario tiene permisos de administrador
-        if (!is_admin()) {
+        // Verificar acceso con roles permitidos y excluidos
+        $roles_permitidos = [1, 2, 3, 8]; // Por ejemplo, rol de administrador
+        $roles_excluidos = [4, 5, 6, 7];  // Por ejemplo, rol excluido (usuario regular)
+
+        if (!tiene_acceso($roles_permitidos, $roles_excluidos)) {
             header('Location: /login');
             exit();
         }
@@ -134,8 +157,11 @@ class DashboardController
     public static function editar(Router $router)
     {
         session_start();
-        // Verificar si el usuario tiene permisos de administrador
-        if (!is_admin()) {
+        // Verificar acceso con roles permitidos y excluidos
+        $roles_permitidos = [1, 2, 3, 8]; // Por ejemplo, rol de administrador
+        $roles_excluidos = [4, 5, 6, 7];  // Por ejemplo, rol excluido (usuario regular)
+
+        if (!tiene_acceso($roles_permitidos, $roles_excluidos)) {
             header('Location: /login');
             exit();
         }
@@ -243,17 +269,20 @@ class DashboardController
         return $alertas;
     }
 
-    
   
     public static function eliminar(Router $router)
     {
         session_start();
-        is_admin();
-        // Verificar si el usuario tiene permisos de administrador
-        if (!is_admin()) {
-        header('Location: /admin/dashboard/index');
-        exit();
-        }// Asegúrate de que el usuario esté autenticado
+        // Verificar acceso con roles permitidos y excluidos
+        $roles_permitidos = [1, 2, 3, 8]; // Por ejemplo, rol de administrador
+        $roles_excluidos = [4, 5, 6, 7];  // Por ejemplo, rol excluido (usuario regular)
+
+        if (!tiene_acceso($roles_permitidos, $roles_excluidos)) {
+            header('Location: /login');
+            exit();
+        }
+        
+        // Asegúrate de que el usuario esté autenticado
         $id = $_GET['id'] ?? null; // Usa null si no existe el parámetro
     
         // Verifica si el ID es válido
@@ -331,14 +360,15 @@ class DashboardController
     }
     
 
-
     public static function cita_programada(Router $router) {
         session_start();
-        is_admin();
-        // Verificar si el usuario tiene permisos de administrador
-        if (!is_admin()) {
-        header('Location: /admin/dashboard/index');
-        exit();
+        // Verificar acceso con roles permitidos y excluidos
+        $roles_permitidos = [1, 2, 3, 8]; // Por ejemplo, rol de administrador
+        $roles_excluidos = [4, 5, 6, 7];  // Por ejemplo, rol excluido (usuario regular)
+
+        if (!tiene_acceso($roles_permitidos, $roles_excluidos)) {
+            header('Location: /login');
+            exit();
         }
     
         // Obtener todas las citas programadas

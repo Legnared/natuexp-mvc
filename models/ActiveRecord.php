@@ -283,6 +283,42 @@ class ActiveRecord
             return null; // Devolver null si no se encuentra ningún registro
         }
     }
+
+    public static function whereIn($column, $values) {
+        $db = self::getDB();
+        $table = static::$tabla;
+    
+        // Escapa los valores para evitar SQL Injection
+        $escapedValues = array_map([$db, 'real_escape_string'], $values);
+        
+        // Construye los placeholders para la consulta
+        $placeholders = implode(',', array_fill(0, count($escapedValues), '?'));
+    
+        // Construye la consulta SQL
+        $sql = "SELECT * FROM $table WHERE $column IN ($placeholders)";
+    
+        // Prepara la consulta
+        $stmt = $db->prepare($sql);
+        if (!$stmt) {
+            die('Error en la preparación de la consulta: ' . $db->error);
+        }
+    
+        // Vincula los parámetros
+        $types = str_repeat('s', count($escapedValues)); // Asumiendo que todos los valores son strings
+        $stmt->bind_param($types, ...$escapedValues);
+    
+        // Ejecuta la consulta
+        $stmt->execute();
+        $result = $stmt->get_result();
+    
+        // Obtén y devuelve todos los resultados
+        return $result->fetch_all(MYSQLI_ASSOC);
+    }
+    
+    
+    
+    
+    
     
     // Busqueda Where con Columna 
     // public static function where($column, $value) {
@@ -306,7 +342,7 @@ class ActiveRecord
     }
 
     // Método estático para buscar registros que pertenecen a un ID específico
-    public static function belongsTo($columna, $valor) {
+    public static function belongsTotable($columna, $valor) {
         $query = "SELECT * FROM " . static::$tabla . " WHERE ${columna} = '${valor}'";
         $resultado = self::consultarSQL($query);
         return $resultado;
@@ -531,13 +567,15 @@ class ActiveRecord
 
     // Busca un registro por su id sin errores al usar depuración
     public static function findId($id) {
+        // Verificar que el ID es un número válido
         if (!is_numeric($id)) {
             return null; // Retornar null si el ID no es un número válido
         }
     
+        // Preparar la consulta SQL
         $query = "SELECT * FROM " . static::$tabla . " WHERE id = ? LIMIT 1";
-        
-        // Usar la conexión a la base de datos para preparar la consulta
+    
+        // Preparar la consulta con la conexión a la base de datos
         $stmt = self::$db->prepare($query);
         
         if (!$stmt) {
@@ -546,13 +584,19 @@ class ActiveRecord
             return null;
         }
     
+        // Enlazar el parámetro ID a la consulta
         $stmt->bind_param("i", $id);
+        
+        // Ejecutar la consulta
         $stmt->execute();
+        
+        // Obtener el resultado
         $resultado = $stmt->get_result();
     
         if ($resultado && $resultado->num_rows > 0) {
             // Obtener el registro como array asociativo
             $registro = $resultado->fetch_assoc();
+            
             // Crear una instancia de la clase y asignar los valores del registro
             $objeto = new static();
             foreach ($registro as $campo => $valor) {
@@ -563,23 +607,54 @@ class ActiveRecord
     
         return null; // Retornar null si no se encontró ningún registro
     }
+    
 
 
 
     public static function findByPacienteId($pacienteId) {
-        $query = "SELECT * FROM " . static::$tabla . " WHERE paciente_id = ?";
-        $stmt = self::$db->prepare($query);
-        $stmt->bind_param('i', $pacienteId);
-        $stmt->execute();
-        $resultado = $stmt->get_result();
-        
-        if ($resultado->num_rows > 0) {
-            $datos = $resultado->fetch_assoc();
-            return new static($datos); // Suponiendo que el constructor acepta un array de datos
+        // Verificar que el ID es un número válido
+        if (!is_numeric($pacienteId)) {
+            return null; // Retornar null si el ID no es un número válido
         }
-        
-        return new static(); // Devuelve una nueva instancia si no hay resultados
+    
+        // Preparar la consulta SQL
+        $query = "SELECT * FROM " . static::$tabla . " WHERE id = ? LIMIT 1";
+    
+        // Preparar la consulta con la conexión a la base de datos
+        $stmt = self::$db->prepare($query);
+    
+        if (!$stmt) {
+            // Manejo de errores al preparar la consulta
+            error_log("Error al preparar la consulta: " . self::$db->error);
+            return null;
+        }
+    
+        // Enlazar el parámetro ID a la consulta
+        $stmt->bind_param("i", $pacienteId);
+    
+        // Ejecutar la consulta
+        $stmt->execute();
+    
+        // Obtener el resultado
+        $resultado = $stmt->get_result();
+    
+        if ($resultado && $resultado->num_rows > 0) {
+            // Obtener el registro como array asociativo
+            $datos = $resultado->fetch_assoc();
+            
+            // Crear una instancia de la clase y asignar los valores del registro
+            $objeto = new static();
+            foreach ($datos as $campo => $valor) {
+                $objeto->$campo = $valor;
+            }
+            return $objeto; // Retornar el objeto con todos los campos
+        }
+    
+        return null; // Retornar null si no se encontró ningún registro
     }
+    
+    
+    
     
     
     
@@ -704,5 +779,47 @@ class ActiveRecord
     
         return $resultado->fetch_all(MYSQLI_ASSOC);
     }
-    
+    public function hasOne($relatedModel, $foreignKey)
+    {
+        // Nombre de la clase del modelo relacionado
+        $relatedClass = 'Model\\' . $relatedModel;
+
+        // Nombre de la clave foránea en el modelo relacionado
+        $foreignKey = $foreignKey;
+
+        // Obtener el valor de la clave foránea en el modelo actual
+        $foreignKeyValue = $this->$foreignKey;
+
+        // Consultar el modelo relacionado
+        $query = "SELECT * FROM " . $relatedClass::$tabla . " WHERE id = ?";
+        $result = $relatedClass::consultarSQL($query, [$foreignKeyValue], 'i');
+
+        return $result[0] ?? null;
+    }
+
+     // Método para obtener el registro relacionado (belongsTo)
+     public function belongsTO($relatedClass, $foreignKey) {
+        $relatedClassName = new $relatedClass();
+        $relatedTable = $relatedClassName->getTable();
+        
+        // Construir consulta para obtener el registro relacionado
+        $query = "SELECT * FROM {$relatedTable} WHERE id = '{$this->attributes[$foreignKey]}'";
+        
+        // Ejecutar consulta y devolver instancia del modelo relacionado
+        $result = $this->consultarSQL($query);
+        return array_shift($result); // Obtener el primer (y único) resultado
+    }
+
+    // Método para obtener los registros relacionados (hasMany)
+    public function hasMany($relatedClass, $foreignKey) {
+        $relatedClassName = new $relatedClass();
+        $relatedTable = $relatedClassName->getTable();
+        
+        // Construir consulta para obtener los registros relacionados
+        $query = "SELECT * FROM {$relatedTable} WHERE {$foreignKey} = '{$this->id}'";
+        
+        // Ejecutar consulta y devolver instancias del modelo relacionado
+        $results = $this->consultarSQL($query);
+        return $results; // Devolver todos los resultados
+    }
 }

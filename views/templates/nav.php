@@ -3,6 +3,7 @@
 
 $current_page = strtok($_SERVER['REQUEST_URI'], '?'); // Obtener la URL actual y eliminar parámetros
 
+
 ?>
 
 <!-- Sidebar Scroll Container -->
@@ -94,7 +95,7 @@ $current_page = strtok($_SERVER['REQUEST_URI'], '?'); // Obtener la URL actual y
                     </a>
                 </li>
 
-                <?php if (is_admin()) : ?>
+                <?php if (tiene_acceso([1, 2, 3, 8], [4, 5, 6, 7])) : ?>
                 <li class="nav-main-heading"><span class="sidebar-mini-visible"></span><span
                         class="sidebar-mini-hidden">Consultas y Citas</span></li>
                 <li
@@ -131,8 +132,10 @@ $current_page = strtok($_SERVER['REQUEST_URI'], '?'); // Obtener la URL actual y
                     </ul>
                 </li>
 
-                 <!-- Agregar enlace para Usuarios -->
-                 <li class="nav-main-heading"><span class="sidebar-mini-visible">S</span><span
+                <!-- Mostrar el siguiente bloque solo si el rol es 1 (Admin) -->
+                <?php if (isset($_SESSION['rol_id']) && $_SESSION['rol_id'] == 1): ?>
+                <!-- Agregar enlace para Usuarios -->
+                <li class="nav-main-heading"><span class="sidebar-mini-visible">S</span><span
                         class="sidebar-mini-hidden">Usuarios</span></li>
 
                 <li class="<?php echo (strpos($current_page, '/admin/system/usuarios') !== false) ? 'open' : ''; ?>">
@@ -196,6 +199,8 @@ $current_page = strtok($_SERVER['REQUEST_URI'], '?'); // Obtener la URL actual y
                         </li>
                     </ul>
                 </li>
+                <?php endif; ?>
+
 
 
                 <li class="nav-main-heading"><span class="sidebar-mini-visible">C</span><span
@@ -218,22 +223,17 @@ $current_page = strtok($_SERVER['REQUEST_URI'], '?'); // Obtener la URL actual y
                                 <span class="sidebar-mini-hide">Configuración</span>
                             </a>
                         </li>
-                        <li>
-                            <a href="/admin/system/cambiar-contraseña"
-                                class="<?php echo ($current_page == '/admin/system/cambiar-contraseña') ? 'active' : ''; ?>">
-                                <span class="sidebar-mini-hide">Cambiar Contraseña</span>
-                            </a>
-                        </li>
                     </ul>
                 </li>
-                <li class="list-inline-item">
-                    <form method="POST" action="/logout" class="d-inline">
-                        <button type="submit" class="btn btn-outline-danger">
-                            <i class="si si-logout"></i><span class="sidebar-mini-hide">Cerrar Sesión</span>
+                <li class="list-inline-item nav-submenu">
+                    <form method="POST" action="/logout" class="d-inline nav-submenu">
+                        <button type="submit" class="nav-submenu btn btn-outline-danger">
+                            <i class="si si-logout"></i> <span class="sidebar-mini-hide">Cerrar Sesión</span>
                         </button>
                     </form>
-                </li>
-                <?php endif; ?>
+                    </li>
+
+                    <?php endif; ?>
             </ul>
         </div>
         <!-- END Side Navigation -->

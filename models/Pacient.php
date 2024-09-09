@@ -11,7 +11,7 @@ class Pacient extends ActiveRecord
     protected static $columnasDB = [
         'id', 'nombre', 'apellidos', 'fecha_nacimiento', 'edad', 'telefono', 'correo', 'sexo_id', 
         'usuario_id', 'expediente_file', 'foto', 'url_avance', 'estatus', 
-        'fecha_creacion', 'fecha_modificacion', 'fecha_eliminacion'
+        'fecha_creacion', 'fecha_modificacion', 'fecha_eliminacion', 'direccion_id'
     ];
 
     public $id;
@@ -30,6 +30,7 @@ class Pacient extends ActiveRecord
     public $fecha_creacion;
     public $fecha_modificacion;
     public $fecha_eliminacion;
+    public $direccion_id;
 
     // Relación con la tabla consultas
     public function consultas()
@@ -38,11 +39,11 @@ class Pacient extends ActiveRecord
     }
 
     // Relación con la tabla direcciones
-    public function direccion()
-    {
-        return Direccion::consultarSQL("SELECT * FROM direcciones WHERE paciente_id = '{$this->id}'");
+    public function direcciones() {
+        return Direccion::findByPacienteId($this->id);
     }
-
+    
+    
     // Relación con la tabla datos_consulta
     public function datosConsulta()
     {
@@ -121,12 +122,31 @@ class Pacient extends ActiveRecord
     }
 
     public function save() {
-        if (!is_null($this->id)) {
-            return $this->actualizar();
-        } else {
-            return $this->crear();
+        self::$db->begin_transaction();
+        
+        try {
+            if (!is_null($this->id)) {
+                $this->actualizar();
+            } else {
+                $this->crear();
+            }
+    
+            // Guardar direcciones asociadas
+            foreach ($this->direcciones() as $direccion) {
+                $direccion->paciente_id = $this->id;
+                $direccion->guardar();
+            }
+    
+            self::$db->commit();
+            return true;
+    
+        } catch (Exception $e) {
+            self::$db->rollback();
+            self::$alertas['error'][] = "Error al guardar: " . $e->getMessage();
+            return false;
         }
     }
+    
 
     public function sincronizar($args = []) {
         foreach ($args as $key => $value) {
@@ -136,12 +156,26 @@ class Pacient extends ActiveRecord
         }
     }
 
+    public static function all() {
+        $query = "SELECT * FROM pacientes WHERE estatus != 0";
+        $resultado = self::consultarSQL($query);
+        return $resultado;
+    }
+    
+
     // Método para obtener pacientes por usuario_id
     public static function pacientesPorUsuario($usuario_id) {
         $usuario_id_escapado = self::$db->escape_string($usuario_id);
         $query = "SELECT * FROM pacientes WHERE usuario_id = '{$usuario_id_escapado}' AND estatus = '1'";
         return self::consultarSQL($query);
     }
+
+    public function obtenerPacientesActivos() {
+        $query = "SELECT * FROM pacientes WHERE estatus = '1'"; // Asegúrate de que '1' indica activo
+        $resultado = self::$db->query($query);
+        return $resultado->fetch_all(MYSQLI_ASSOC); // Ajusta según cómo manejas los resultados
+    }
+
 
     public static function findByUrlAvance($url_avance) {
         $query = "SELECT * FROM pacientes WHERE url_avance = '$url_avance' AND estatus = '1'";
@@ -171,5 +205,34 @@ class Pacient extends ActiveRecord
         }
     }
     
+    public function validarFoto()
+    {
+        $alertas = [];
+
+        // Validar si el archivo de foto está presente y es válido
+        if (!isset($_FILES['foto']) || $_FILES['foto']['error'] !== UPLOAD_ERR_OK) {
+            $alertas['error'][] = 'Error al subir la foto del paciente.';
+        } else {
+            // Validar tipo y tamaño del archivo
+            $tipoArchivo = $_FILES['foto']['type'];
+            $tamanoArchivo = $_FILES['foto']['size'];
+
+            if (!in_array($tipoArchivo, ['image/jpeg', 'image/png', 'image/webp'])) {
+                $alertas['error'][] = 'El archivo debe ser una imagen JPEG, PNG o WEBP.';
+            }
+
+            if ($tamanoArchivo > 5000000) { // 5 MB como ejemplo
+                $alertas['error'][] = 'El archivo debe ser menor de 5 MB.';
+            }
+        }
+
+        return $alertas;
+    }
+    
+     // Relación con Direccion
+     public function direccion() {
+        return $this->belongsTO(Direccion::class, 'direccion_id');
+    }
+
     
 }

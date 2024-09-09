@@ -32,6 +32,9 @@
                         <!-- Sign Up Form -->
                         <div class="px-30 py-10">
                             <form method="POST" action="/crear" id="signup-form">
+                                <!-- Campo oculto para usuario_id -->
+                                <input type="hidden" name="usuario_id" value="<?= $usuario->id ?>">
+                                
                                 <!-- Datos Personales -->
                                 <div class="form-group row">
                                     <div class="col-12">
@@ -82,7 +85,6 @@
                                     </div>
                                 </div>
                                 <!-- Datos de Dirección -->
-
                                 <div class="form-group row">
                                     <div class="col-12">
                                         <div class="form-material floating">
@@ -91,7 +93,6 @@
                                         </div>
                                     </div>
                                 </div>
-
                                 <div class="form-group row">
                                     <div class="col-12">
                                         <div class="form-material floating">

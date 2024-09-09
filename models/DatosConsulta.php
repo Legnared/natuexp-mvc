@@ -41,7 +41,7 @@ class DatosConsulta extends ActiveRecord {
             $alertas['error'][] = 'La presión arterial del Paciente es obligatoria';
         }
         if (!$this->nivel_azucar) {
-            $alertas['error'][] = 'La Glucosa del PAciente es obligatorio';
+            $alertas['error'][] = 'La Glucosa del Paciente es obligatorio';
         }
         if (empty($this->peso)) {
             $alertas['error'][] = 'El peso del Paciente es obligatorio';
