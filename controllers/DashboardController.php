@@ -29,23 +29,24 @@ class DashboardController
         $rol_id = $_SESSION['rol_id']; // Asumiendo que el rol está guardado en la sesión
         $alertas = [];
         
-        // Verificar si el usuario tiene rol de administrador o rol privilegiado (rol_id 1 o 3)
-        if ($rol_id == 1 || $rol_id == 3) {
-            // Si es administrador o rol privilegiado, obtener todos los pacientes
-            $pacientes = Pacient::all(); // Método que trae todos los pacientes
-        } else {
+        // Verificar si el usuario tiene rol de administrador o rol privilegiado (rol_id 1, 2 o 3)
+        if (in_array($rol_id, [1, 2, 3])) {
+            // Si es administrador o rol privilegiado, obtener el total de pacientes con rol_id 1, 2, o 3
+            $totalPacientes = Pacient::countByRoles([1, 2, 3]);
+            
+            // Obtener todos los pacientes si es administrador o rol privilegiado
+            $pacientes = Pacient::all();
+        } elseif ($_SESSION['rol_id'] == 2) {
             // Si no es administrador, obtener solo los pacientes asociados al médico (usuario actual)
             $pacientes = Pacient::pacientesPorUsuario($usuario_id);
+            $totalPacientes = count($pacientes);
         }
-        
-        // Verificar que $pacientes no sea nulo y que sea un array o colección
-        $totalPacientes = is_array($pacientes) ? count($pacientes) : ($pacientes ? $pacientes->count() : 0);
         
         // Obtener consultas relacionadas con los pacientes
         $consultas = Consulta::consultasPorPacientes($pacientes);
         
         // Total de citas por paciente
-        $totalCitas = $rol_id == 1 || $rol_id == 3 ? Cita::all() : Cita::countByColumn('citas', 'paciente_id', $usuario_id);
+        $totalCitas = ($rol_id == 1 || $rol_id == 3) ? Cita::all() : Cita::countByColumn('citas', 'paciente_id', $usuario_id);
         
         // Citas por semana
         $citasPorSemana = Cita::citasPorSemana($usuario_id);
@@ -60,6 +61,7 @@ class DashboardController
             'citasPorSemana' => $citasPorSemana
         ], 'admin-layout');
     }
+    
     
 
     public static function expediente(Router $router)

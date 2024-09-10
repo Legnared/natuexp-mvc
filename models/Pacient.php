@@ -162,6 +162,13 @@ class Pacient extends ActiveRecord
         return $resultado;
     }
     
+    public static function countByRoles($roles) {
+        $roles_string = implode(',', array_map('intval', $roles));
+        $query = "SELECT COUNT(*) FROM pacientes WHERE rol_id IN ($roles_string)";
+        $resultado = self::$db->query($query);
+        return $resultado->fetchColumn();
+    }
+    
 
     // Método para obtener pacientes por usuario_id
     public static function pacientesPorUsuario($usuario_id) {

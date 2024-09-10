@@ -110,7 +110,7 @@ class ExpedienteController
          // Obtener usuarios según el rol actual
         if ($_SESSION['rol_id'] == 1 || $_SESSION['rol_id'] == 3) {
             // Roles 1 y 3 pueden ver todos los médicos y otros roles si es necesario
-            $usuarios = Usuario::whereIn('rol_id', [1, 2, 3]);
+            $usuarios = Usuario::whereIn('rol_id', [2]);
         } elseif ($_SESSION['rol_id'] == 2) {
             // Rol 2 (médico) solo puede ver a sí mismo
             $usuarios = Usuario::where('id', $_SESSION['id']);
@@ -287,7 +287,7 @@ class ExpedienteController
           // Obtener usuarios según el rol actual
           if ($_SESSION['rol_id'] == 1 || $_SESSION['rol_id'] == 3) {
             // Roles 1 y 3 pueden ver todos los médicos y otros roles si es necesario
-            $usuarios = Usuario::whereIn('rol_id', [1, 2, 3]);
+            $usuarios = Usuario::whereIn('rol_id', [2]);
         } elseif ($_SESSION['rol_id'] == 2) {
             // Rol 2 (médico) solo puede ver a sí mismo
             $usuarios = Usuario::where('id', $_SESSION['id']);
@@ -332,6 +332,7 @@ class ExpedienteController
             // Validar antecedentes médicos
             $antecedentes->sincronizar($_POST);
             $alertas = array_merge($alertas, $antecedentes->validar());
+
 
             // Validar datos de consulta
             $datosConsulta->sincronizar($_POST);

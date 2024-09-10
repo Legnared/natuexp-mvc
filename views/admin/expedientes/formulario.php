@@ -13,7 +13,7 @@
 
                 <!-- Solo mostrar el select si el rol del usuario es 1 (Administrador) o 3 (Recepcionista) -->
                 <?php if ($_SESSION['rol_id'] == 1 || $_SESSION['rol_id'] == 3): ?>
-                <div class="col-md-6 mb-3">
+                <div class="col-md-12 mb-3">
                     <div class="form-material">
                         <select name="usuario_id" id="usuario_id" class="form-control">
                             <option value="" disabled>Seleccionar Médico:</option>
@@ -24,7 +24,7 @@
                             </option>
                             <?php endforeach; ?>
                         </select>
-                        <label for="usuario_id"><span class="text-danger">*</span> Médico</label>
+                        <label for="usuario_id"><span class="text-danger">*</span> Asígna a un Médico</label>
                     </div>
                 </div>
                 <?php endif; ?>

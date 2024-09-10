@@ -34,8 +34,8 @@ $current_page = strtok($_SERVER['REQUEST_URI'], '?'); // Obtener la URL actual y
                 <div class="content-header-item">
                     <a class="link-effect font-w700" href="/admin/dashboard">
                         <i class="fa fa-heartbeat text-info"></i>
-                        <span class="font-size-xl text-dual-primary-dark">E</span><span
-                            class="font-size-xl text-info">Clínicos</span>
+                        <span class="font-size-xl text-dual-primary-dark">Natu</span><span
+                            class="font-size-xl text-info">Exp</span>
                     </a>
                 </div>
                 <!-- END Logo -->
@@ -49,7 +49,7 @@ $current_page = strtok($_SERVER['REQUEST_URI'], '?'); // Obtener la URL actual y
             <!-- Visible only in mini mode -->
             <div class="sidebar-mini-visible-b align-v animated fadeIn">
                 <img class="img-avatar img-avatar32"
-                    src="<?php echo htmlspecialchars($_ENV['HOST'] . '/img/photosperfil/' . $_SESSION["foto"] . '.png'); ?>"
+                    src="<?php echo htmlspecialchars($_ENV['HOST'] . '/img/users/' . $_SESSION["foto"] . '.png'); ?>"
                     alt="Foto de Perfil">
             </div>
             <!-- END Visible only in mini mode -->
@@ -58,7 +58,7 @@ $current_page = strtok($_SERVER['REQUEST_URI'], '?'); // Obtener la URL actual y
             <div class="sidebar-mini-hidden-b text-center">
                 <a class="img-link" href="/admin/system/perfil/cambiar-foto">
                     <img class="img-avatar"
-                        src="<?php echo htmlspecialchars($_ENV['HOST'] . '/img/photosperfil/' . $_SESSION["foto"] . '.png'); ?>"
+                        src="<?php echo htmlspecialchars($_ENV['HOST'] . '/img/users/' . $_SESSION["foto"] . '.png'); ?>"
                         alt="Foto Perfil">
                 </a>
                 <ul class="list-inline mt-10">
@@ -95,7 +95,7 @@ $current_page = strtok($_SERVER['REQUEST_URI'], '?'); // Obtener la URL actual y
                     </a>
                 </li>
 
-                <?php if (tiene_acceso([1, 2, 3, 8], [4, 5, 6, 7])) : ?>
+                <?php if (tiene_acceso([1, 2, 3], [4, 5, 6, 7, 8])) : ?>
                 <li class="nav-main-heading"><span class="sidebar-mini-visible"></span><span
                         class="sidebar-mini-hidden">Consultas y Citas</span></li>
                 <li
@@ -134,9 +134,11 @@ $current_page = strtok($_SERVER['REQUEST_URI'], '?'); // Obtener la URL actual y
 
                 <!-- Mostrar el siguiente bloque solo si el rol es 1 (Admin) -->
                 <?php if (isset($_SESSION['rol_id']) && $_SESSION['rol_id'] == 1): ?>
-                <!-- Agregar enlace para Usuarios -->
+
+
+                <!-- Agregar enlace para Roles -->
                 <li class="nav-main-heading"><span class="sidebar-mini-visible">S</span><span
-                        class="sidebar-mini-hidden">Usuarios</span></li>
+                        class="sidebar-mini-hidden">Sistema</span></li>
 
                 <li class="<?php echo (strpos($current_page, '/admin/system/usuarios') !== false) ? 'open' : ''; ?>">
                     <a class="nav-submenu <?php echo (strpos($current_page, '/admin/system/usuarios') !== false) ? 'active' : ''; ?>"
@@ -153,9 +155,6 @@ $current_page = strtok($_SERVER['REQUEST_URI'], '?'); // Obtener la URL actual y
                     </ul>
                 </li>
 
-                <!-- Agregar enlace para Roles -->
-                <li class="nav-main-heading"><span class="sidebar-mini-visible">S</span><span
-                        class="sidebar-mini-hidden">Sistema</span></li>
 
                 <li class="<?php echo (strpos($current_page, '/admin/system/roles') !== false) ? 'open' : ''; ?>">
                     <a class="nav-submenu <?php echo (strpos($current_page, '/admin/system/roles') !== false) ? 'active' : ''; ?>"
@@ -204,11 +203,11 @@ $current_page = strtok($_SERVER['REQUEST_URI'], '?'); // Obtener la URL actual y
 
 
                 <li class="nav-main-heading"><span class="sidebar-mini-visible">C</span><span
-                        class="sidebar-mini-hidden">Configuración</span></li>
+                        class="sidebar-mini-hidden">Perfil</span></li>
                 <li class="<?php echo (strpos($current_page, '/admin/system') !== false) ? 'open' : ''; ?>">
                     <a class="nav-submenu <?php echo (strpos($current_page, '/admin/system') !== false) ? 'active' : ''; ?>"
                         data-toggle="nav-submenu" href="#">
-                        <i class="fa fa-cogs"></i><span class="sidebar-mini-hide">Sistema</span>
+                        <i class="fa fa-pen-to-square"></i><span class="sidebar-mini-hide">Perfil</span>
                     </a>
                     <ul>
                         <li>
@@ -231,9 +230,9 @@ $current_page = strtok($_SERVER['REQUEST_URI'], '?'); // Obtener la URL actual y
                             <i class="si si-logout"></i> <span class="sidebar-mini-hide">Cerrar Sesión</span>
                         </button>
                     </form>
-                    </li>
+                </li>
 
-                    <?php endif; ?>
+                <?php endif; ?>
             </ul>
         </div>
         <!-- END Side Navigation -->

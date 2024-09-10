@@ -21,11 +21,11 @@
                     <p>Imagen Actual:</p>
                     <div class="form-material">
                         <picture>
-                            <source class="img-avatar" srcset="<?php echo $_ENV['HOST'] . '/img/photosperfil/' . $usuario->foto; ?>.webp" type="image/webp">
-                            <source class="img-avatar" srcset="<?php echo $_ENV['HOST'] . '/img/photosperfil/' . $usuario->foto; ?>.png" type="image/png">
-                            <source class="img-avatar" srcset="<?php echo $_ENV['HOST'] . '/img/photosperfil/' . $usuario->foto; ?>.jpg" type="image/jpg">
+                            <source class="img-avatar" srcset="<?php echo $_ENV['HOST'] . '/img/users/' . $usuario->foto; ?>.webp" type="image/webp">
+                            <source class="img-avatar" srcset="<?php echo $_ENV['HOST'] . '/img/users/' . $usuario->foto; ?>.png" type="image/png">
+                            <source class="img-avatar" srcset="<?php echo $_ENV['HOST'] . '/img/users/' . $usuario->foto; ?>.jpg" type="image/jpg">
 
-                            <img class="img-avatar" src="<?php echo $_ENV['HOST'] . '/img/photosperfil/' . $usuario->foto; ?>.png" alt="Foto Perfil">
+                            <img class="img-avatar" src="<?php echo $_ENV['HOST'] . '/img/users/' . $usuario->foto; ?>.png" alt="Foto Perfil">
                         </picture>
                     </div>
 
